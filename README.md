@@ -223,11 +223,11 @@ test:      pruebas
 
 ## Equipo de desarrollo
 
-| Nombre | Cuenta | Rol |
-|--------|--------|-----|
+| Nombre ---------------- | Cuenta ------| Rol |
+
 | Jorge Arturo Vallecillo | 202310050061 | Project Manager |
-| Lucas Rodrigo Bautista | 202310050126 | Systems Analyst |
-| Ángel Antonio Pérez | 202310050007 | Backend & BD |
+| Lucas Rodrigo Bautista  | 202310050126 | Systems Analyst |
+| Ángel Antonio Pérez     | 202310050007 | Backend & BD |
 | Diany Lizbeth Enamorado | 202310050027 | Backend & BD |
-| Edson Jhair Ríos | 202310050190 | Frontend Developer |
-| Derick Dair Muñoz | 202210050083 | QA & Documentación |
+| Edson Jhair Ríos        | 202310050190 | Frontend Developer |
+| Derick Dair Muñoz       | 202210050083 | QA & Documentación |
