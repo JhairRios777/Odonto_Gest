@@ -3,6 +3,7 @@ import 'core/constants/app_colors.dart';
 import 'core/constants/app_assets.dart';
 import 'core/constants/app_strings.dart';
 import 'core/constants/app_typography.dart';
+import 'modules/expedientes/views/odontogram_screen.dart';
 
 void main() {
   runApp(const OdontoGestApp());
@@ -183,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 180,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OdontogramScreen())),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.surface,
