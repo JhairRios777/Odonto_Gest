@@ -3,11 +3,11 @@
 --  Versión: 1.1 (correcciones aplicadas)
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS clini_dent
+CREATE DATABASE IF NOT EXISTS odonto_gest
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE clini_dent;
+USE odonto_gest;
 
 -- ------------------------------------------------------------
 -- ROLES Y PERMISOS
