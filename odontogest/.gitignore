@@ -44,7 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-#Jorge
+#Jorge 
 /generated_plugin_registrant.cc
 /generated_plugin_registrant.h
 /generated_plugin_registrant.cpp
@@ -52,3 +52,5 @@ app.*.map.json
 /GeneratedPluginRegistrant.swift
 /GeneratedPluginRegistrant.java
 pubspec.lock
+
+#Lucas
