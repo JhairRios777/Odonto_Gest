@@ -232,4 +232,4 @@ test:      pruebas
 | Edson Jhair Ríos        | 202310050190 | Frontend Developer |
 | Derick Dair Muñoz       | 202210050083 | QA & Documentación |
 
-Diany
+
