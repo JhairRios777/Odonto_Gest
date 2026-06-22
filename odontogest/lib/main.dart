@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'core/constants/app_colors.dart';
 import 'core/constants/app_assets.dart';
 import 'core/constants/app_strings.dart';
-import 'core/constants/app_typography.dart';
-import 'modules/expedientes/views/odontogram_screen.dart';
+import 'core/constants/app_theme.dart'; // tokens centralizados: AppColors, AppTypography, AppTheme
 
 void main() {
   runApp(const OdontoGestApp());
@@ -17,10 +15,9 @@ class OdontoGestApp extends StatelessWidget {
     return MaterialApp(
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        useMaterial3: true,
-      ),
+      // AppTheme.light() consume todos los tokens de app_theme.dart
+      // Para cambiar colores/fuentes de toda la app, editar app_theme.dart
+      theme: AppTheme.light(),
       home: const LoginScreen(),
     );
   }
@@ -184,7 +181,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 180,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OdontogramScreen())),
+                        // TODO: reemplazar con AuthController.login() cuando exista
+                        // El backend retorna el rol asignado; NUNCA lo elige el usuario
+                        onPressed: () {},
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.surface,

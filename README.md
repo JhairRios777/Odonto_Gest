@@ -221,6 +221,131 @@ test:      pruebas
 
 ---
 
+## Base de datos v2 — Bloques funcionales
+
+Archivo: `BD_CliniDent/clini_dent_v2.sql` (35 tablas, 8 bloques)
+
+| Bloque | Tablas clave | Descripción |
+|---|---|---|
+| Seguridad | Usuarios, Roles, Permisos, RolesPermisos | RBAC — roles asignados por admin |
+| Personal | Empleados, Odontologos, Especialidades | Odontólogos son entidad separada con CodigoLegi y Especialidad |
+| Pacientes | Pacientes, ExpedienteOdontologico, Odontograma | Historial clínico completo, notación FDI |
+| Citas | Citas, TratamientosCita, Tratamientos | 1 cita = 1 hora; muchas citas por día |
+| Facturación | Facturas, DetalleFactura, Servicios, Pagos | Solo `Servicios` se facturan; `Tratamientos` son clínicos |
+| Inventario | Productos, Categorias, Movimientos, KV_Producto | KV_Producto: key=carpeta, value=nombre de archivo |
+| Archivos | KV_IMG | Almacena rutas del sistema de archivos |
+| Configuración | ISV, Configuracion | ISV: `DECIMAL(4,2)` — valores `0.00`, `0.15`, `0.18` |
+
+**Regla clave:** `Servicios → Facturas` (cobro). `Tratamientos → Citas` (clínico). Flujos independientes.
+
+---
+
+## Autenticación y RBAC
+
+El login recibe **solo usuario y contraseña**. El sistema identifica automáticamente el rol y los permisos.
+**El usuario nunca selecciona su rol en la pantalla de login.**
+
+```
+POST /api/auth/login
+Body:    { usuario, password }
+Response: { token, rol, permisos[] }
+```
+
+Roles: `Administrador`, `Recepcionista`, `Odontologo`, `Asistente`.
+El token Bearer controla el acceso a cada endpoint de la API.
+
+---
+
+## Design Tokens — personalización visual
+
+Todo el estilo está centralizado en `odontogest/lib/core/constants/app_theme.dart`.
+Para cambiar colores, tipografía o espaciado de **toda la app**, editar solo ese archivo.
+
+### Colores
+
+```dart
+AppColors.primary      = Color(0xFF1A56AB);  // Azul — AppBar, botones
+AppColors.primaryDark  = Color(0xFF1847A0);  // Azul oscuro — gradientes
+AppColors.background   = Color(0xFFECF1F8);  // Fondo de pantallas
+AppColors.surface      = Colors.white;        // Tarjetas, inputs
+AppColors.success      = Color(0xFF16A34A);  // Verde — atendido, pagado
+AppColors.warning      = Color(0xFFF59E0B);  // Amarillo — pendiente
+AppColors.error        = Color(0xFFDC2626);  // Rojo — cancelado, crítico
+```
+
+### Espaciado (8pt grid)
+
+```dart
+AppSpacing.lg  = 16.0;  // padding estándar de tarjeta
+AppSpacing.xxl = 24.0;  // padding de pantalla
+```
+
+### Radios
+
+```dart
+AppRadius.md   = 12.0;   // tarjetas
+AppRadius.pill = 100.0;  // chips y FAB
+```
+
+### Tipografía
+
+```dart
+AppTypography.headline()   // 28px Bold  — pantallas de bienvenida
+AppTypography.title()      // 20px Semi  — AppBar
+AppTypography.body()       // 14px Reg   — texto general
+AppTypography.label()      // 14px Semi  — etiquetas de campo
+AppTypography.button()     // 16px Bold  — botones primarios
+AppTypography.caption()    // 12px Reg   — metadatos, fechas
+AppTypography.badge()      // 10px Semi  — chips de estado
+```
+
+### Aplicar en MaterialApp
+
+```dart
+// main.dart — ya configurado
+MaterialApp(
+  theme: AppTheme.light(), // consume todos los tokens de app_theme.dart
+)
+```
+
+---
+
+## Pantallas diseñadas en Figma
+
+Archivo: `https://www.figma.com/design/AIDDaiWJEHbrukWJrceyfY`
+
+### Móvil (390×844)
+
+| Frame | Estado |
+|---|---|
+| Login (iPhone 17-2) | ✅ Codificado en `main.dart` |
+| Dashboard | ✅ Diseñado |
+| Agenda - Citas | ✅ Diseñado |
+| Pacientes | ✅ Diseñado |
+| Facturación | ✅ Diseñado |
+| Nueva Cita | ✅ Diseñado |
+| Expediente — Paciente | ✅ Diseñado |
+| Perfil — Config | ✅ Diseñado |
+| Factura — Detalle | ✅ Diseñado |
+| Inventario | ✅ Diseñado |
+| Odontograma | ✅ Codificado en `odontogram_screen.dart` |
+
+### Web Admin (1440×900 — PHP MVC)
+
+| Frame | Estado |
+|---|---|
+| Web — Login | ✅ Diseñado (sin selector de rol) |
+| Web — Dashboard | ✅ Diseñado |
+
+---
+
+## Moneda
+
+Toda la app usa **Lempiras (L)** — Honduras.
+El ISV se almacena como `DECIMAL(4,2)` con valores `0.00`, `0.15` o `0.18`.
+
+---
+
 ## Equipo de desarrollo
 
 | Nombre ---------------- | Cuenta ------| Rol |
