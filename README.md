@@ -8,13 +8,46 @@
 
 ---
 
+## Arquitectura del sistema
+
+```
+┌─────────────────────┐        ┌──────────────────────────┐
+│   Flutter (móvil)   │        │    PHP MVC (web admin)   │
+│  Rol principal:     │        │  Todos los roles desde   │
+│  Odontólogo en      │◄──────►│  cualquier PC/laptop     │
+│  sala de atención   │        │  (incluso en sala)       │
+└─────────────────────┘        └──────────────────────────┘
+            │                              │
+            └──────────────┬───────────────┘
+                           ▼
+                  ┌─────────────────┐
+                  │  REST API       │
+                  │  PHP MVC puro   │
+                  │  Bearer Token   │
+                  └────────┬────────┘
+                           ▼
+                  ┌─────────────────┐
+                  │  MySQL/MariaDB  │
+                  │  (XAMPP local)  │
+                  └─────────────────┘
+```
+
+**Regla de uso por plataforma:**
+
+- **App Flutter (móvil)** — Diseñada para el **odontólogo** en sala de atención. Acceso rápido a odontograma, expediente del paciente en turno, citas del día y tratamientos. Pantalla táctil, una mano libre.
+- **Panel web PHP** — Sistema **completo** para todos los roles (Admin, Recepcionista, Asistente, Odontólogo). Si el odontólogo tiene una PC o laptop en la sala de atención, puede usar el web con todas las funcionalidades.
+- **Ambas plataformas comparten** el mismo backend API y la misma base de datos. Un cambio en el odontograma desde el móvil se refleja inmediatamente en el web y viceversa.
+
+---
+
 ## Stack tecnológico
 
 | Capa | Tecnología |
 |------|-----------|
 | App móvil | Flutter (Dart) — iOS & Android |
-| Backend / API | PHP (REST API) |
-| Base de datos | MySQL |
+| Panel web | PHP MVC puro — sin frameworks, XAMPP |
+| Backend / API | PHP REST API — Bearer Token |
+| Base de datos | MySQL / MariaDB |
 | Control de versiones | Git & GitHub |
 
 ---
