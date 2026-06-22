@@ -95,7 +95,7 @@ class DashboardScreen extends StatelessWidget {
         title: Text('OdontoGest',
             style: AppTypography.titleSmall(color: Colors.white)),
         titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
-        collapseMode: CollapseMode.fade,
+        collapseMode: CollapseMode.pin,
       ),
       backgroundColor: AppColors.primary,
     );

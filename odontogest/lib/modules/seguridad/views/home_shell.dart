@@ -8,7 +8,7 @@ import '../../facturacion/views/facturacion_screen.dart';
 import '../../inventario/views/inventario_screen.dart';
 import '../../../core/constants/app_theme.dart';
 import 'dashboard_screen.dart';
-import 'perfil_screen.dart';
+// perfil_screen.dart se navega por push desde el avatar del dashboard, no como tab
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, this.rol = 'Odontologo'});
