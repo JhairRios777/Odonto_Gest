@@ -56,7 +56,14 @@ class DashboardScreen extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
+      // Título visible solo cuando el header está colapsado (al hacer scroll)
+      title: Text('OdontoGest',
+          style: AppTypography.titleSmall(color: Colors.white)),
+      centerTitle: false,
+      backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
+        // Sin title aquí — evita el overlap con el contenido del background
+        collapseMode: CollapseMode.pin,
         background: Container(
           decoration: const BoxDecoration(gradient: AppGradients.primary),
           padding: const EdgeInsets.fromLTRB(16, 48, 16, 12),
@@ -92,12 +99,7 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        title: Text('OdontoGest',
-            style: AppTypography.titleSmall(color: Colors.white)),
-        titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
-        collapseMode: CollapseMode.pin,
       ),
-      backgroundColor: AppColors.primary,
     );
   }
 
