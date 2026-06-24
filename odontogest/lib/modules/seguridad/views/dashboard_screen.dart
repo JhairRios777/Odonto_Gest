@@ -6,9 +6,10 @@ import '../../../core/session/app_session.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/services/dashboard_service.dart';
+import '../../../data/services/notificaciones_service.dart';
 import '../../agenda/views/nueva_cita_screen.dart';
 import '../../expedientes/views/buscar_paciente_screen.dart';
-import '../../expedientes/views/expediente_paciente_screen.dart';
+import 'notificaciones_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool               _loading   = true;
   DashboardMetricas  _metricas  = DashboardMetricas.empty();
   List<CitaHoy>      _citas     = [];
+  int                _noLeidas  = 0;
 
   @override
   void initState() {
@@ -31,15 +33,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _cargarDatos() async {
     setState(() => _loading = true);
+    // Genera alertas de citas y carga datos en paralelo
     final results = await Future.wait([
       DashboardService.fetchMetricas(),
       DashboardService.fetchCitasHoy(),
+      NotificacionesService.generarAlertas().then((_) =>
+          NotificacionesService.listar()),
     ]);
     if (!mounted) return;
+    final notifResult = results[2] as NotificacionesResult;
     setState(() {
       _metricas = results[0] as DashboardMetricas;
       _citas    = results[1] as List<CitaHoy>;
+      _noLeidas = notifResult.noLeidas;
       _loading  = false;
+    });
+  }
+
+  void _abrirNotificaciones() {
+    Navigator.push(context,
+      MaterialPageRoute(builder: (_) => const NotificacionesScreen()),
+    ).then((_) {
+      // Refresca badge al volver
+      NotificacionesService.listar().then((r) {
+        if (mounted) setState(() => _noLeidas = r.noLeidas);
+      });
     });
   }
 
@@ -96,23 +114,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final hoy    = _fechaHoy();
 
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 120,
       pinned: true,
-      title: Text('OdontoGest',
-          style: AppTypography.titleSmall(color: Colors.white)),
-      centerTitle: false,
+      automaticallyImplyLeading: false,
       backgroundColor: AppColors.primary,
+      // Sin title — el flexibleSpace lo maneja todo
       actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.white),
-          onPressed: _cargarDatos,
+        Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+              onPressed: _abrirNotificaciones,
+            ),
+            if (_noLeidas > 0)
+              Positioned(
+                right: 6, top: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                      color: Colors.red, shape: BoxShape.circle),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    _noLeidas > 9 ? '9+' : '$_noLeidas',
+                    style: const TextStyle(color: Colors.white,
+                        fontSize: 9, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
         ),
+        const SizedBox(width: 4),
       ],
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.pin,
         background: Container(
           decoration: const BoxDecoration(gradient: AppGradients.primary),
-          padding: const EdgeInsets.fromLTRB(16, 48, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 48, 56, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
@@ -136,18 +174,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(nombre,
-                            style:
-                                AppTypography.titleSmall(color: Colors.white)),
+                            style: AppTypography.titleSmall(color: Colors.white)),
                         Text('$rol · $hoy',
-                            style: AppTypography.caption(
-                                color: Colors.white70)),
+                            style: AppTypography.caption(color: Colors.white70)),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_outlined,
-                        color: Colors.white),
-                    onPressed: () {},
                   ),
                 ],
               ),
@@ -197,8 +228,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _Acceso('Odontograma', Icons.grid_view_rounded, AppColors.primary,
           () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const BuscarPacienteScreen()))),
-      _Acceso('Nuevo Paciente', Icons.person_add_outlined, AppColors.success,
-          () {}),
+      _Acceso('Buscar Paciente', Icons.person_search_outlined, AppColors.success,
+          () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const BuscarPacienteScreen()))),
       _Acceso('Nueva Cita', Icons.calendar_month_outlined, AppColors.warning,
           () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const NuevaCitaScreen()))),
