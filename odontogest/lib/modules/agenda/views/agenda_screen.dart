@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_theme.dart';
 import '../../../data/services/agenda_service.dart';
 import '../../expedientes/views/buscar_paciente_screen.dart';
 
@@ -9,8 +10,8 @@ class AgendaScreen extends StatefulWidget {
 }
 
 class _AgendaScreenState extends State<AgendaScreen> {
-  static const _verde      = Color(0xFF005C3E);
-  static const _verdeLight = Color(0xFF00E676);
+  static const _primary      = AppColors.primary;
+  static const _primaryLight = AppColors.primaryLight;
 
   DateTime         _fecha   = DateTime.now();
   String           _filtro  = 'all';
@@ -35,7 +36,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (c, child) => Theme(
-        data: Theme.of(c).copyWith(colorScheme: const ColorScheme.light(primary: _verde)),
+        data: Theme.of(c).copyWith(colorScheme: const ColorScheme.light(primary: _primary)),
         child: child!,
       ),
     );
@@ -67,7 +68,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
           ),
           ...opts.entries.map((e) => ListTile(
             title: Text(e.key),
-            leading: const Icon(Icons.edit_note, color: _verde),
+            leading: const Icon(Icons.edit_note, color: _primary),
             onTap: () => Navigator.pop(context, e.value),
           )),
           const SizedBox(height: 20),
@@ -107,7 +108,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   Color _colorEstado(String e) => switch(e) {
     'confirmada'  => Colors.blue,
-    'completada'  => _verde,
+    'completada'  => _primary,
     'cancelada'   => Colors.red,
     'no_asistio'  => Colors.orange,
     _             => Colors.grey,
@@ -138,7 +139,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('Agenda', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: _verde,
+        backgroundColor: _primary,
         elevation: 0,
         actions: [
           IconButton(
@@ -152,7 +153,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
         children: [
           // Cabecera fecha + filtros
           Container(
-            color: _verde,
+            color: _primary,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,10 +176,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
                         decoration: BoxDecoration(
-                          color:  sel ? _verdeLight : Colors.transparent,
+                          color:  sel ? _primaryLight : Colors.transparent,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: sel ? _verdeLight : Colors.white60,
+                            color: sel ? _primaryLight : Colors.white60,
                             width: 1.2,
                           ),
                         ),
@@ -199,14 +200,14 @@ class _AgendaScreenState extends State<AgendaScreen> {
           ),
 
           if (_saving)
-            const LinearProgressIndicator(color: _verdeLight, backgroundColor: Colors.transparent),
+            const LinearProgressIndicator(color: _primaryLight, backgroundColor: Colors.transparent),
 
           Expanded(
             child: RefreshIndicator(
-              color: _verde,
+              color: _primary,
               onRefresh: _cargar,
               child: _loading
-                ? const Center(child: CircularProgressIndicator(color: _verde))
+                ? const Center(child: CircularProgressIndicator(color: _primary))
                 : _citas.isEmpty
                   ? ListView(children: [
                       SizedBox(
@@ -302,8 +303,8 @@ class _CitaCard extends StatelessWidget {
                     Row(children: [
                       TextButton.icon(
                         onPressed: onExpediente,
-                        icon: const Icon(Icons.folder_open, size: 16, color: Color(0xFF005C3E)),
-                        label: const Text('Expediente', style: TextStyle(color: Color(0xFF005C3E), fontSize: 12)),
+                        icon: const Icon(Icons.folder_open, size: 16, color: AppColors.primary),
+                        label: const Text('Expediente', style: TextStyle(color: AppColors.primary, fontSize: 12)),
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero, minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap),

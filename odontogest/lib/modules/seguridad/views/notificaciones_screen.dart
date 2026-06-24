@@ -85,7 +85,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
             ),
           ],
         ]),
-        backgroundColor: const Color(0xFF005C3E),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -98,11 +98,11 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF005C3E)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _lista.isEmpty
               ? _buildVacia()
               : RefreshIndicator(
-                  color: const Color(0xFF005C3E),
+                  color: AppColors.primary,
                   onRefresh: _cargar,
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -150,7 +150,7 @@ class _NotifTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: leida ? Colors.transparent : const Color(0xFF005C3E).withOpacity(0.05),
+        color: leida ? Colors.transparent : AppColors.primary.withOpacity(0.05),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,13 +161,13 @@ class _NotifTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: leida
                     ? AppColors.border
-                    : const Color(0xFF005C3E).withOpacity(0.12),
+                    : AppColors.primary.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _iconTitulo(n.titulo),
                 size: 20,
-                color: leida ? AppColors.textMuted : const Color(0xFF005C3E),
+                color: leida ? AppColors.textMuted : AppColors.primary,
               ),
             ),
             const SizedBox(width: 12),
@@ -201,7 +201,7 @@ class _NotifTile extends StatelessWidget {
             if (!leida)
               const Padding(
                 padding: EdgeInsets.only(left: 8, top: 4),
-                child: CircleAvatar(radius: 4, backgroundColor: Color(0xFF00E676)),
+                child: CircleAvatar(radius: 4, backgroundColor: AppColors.primaryLight),
               ),
           ],
         ),
