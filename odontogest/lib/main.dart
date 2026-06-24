@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/constants/app_assets.dart';
 import 'core/constants/app_strings.dart';
 import 'core/constants/app_theme.dart';
+import 'core/session/app_session.dart';
 import 'data/services/auth_service.dart';
 import 'modules/seguridad/views/home_shell.dart';
 
@@ -88,7 +89,14 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = false);
 
     if (result.success) {
-      _showSnackBar('Bienvenido, \${result.nombre ?? usuario} ✓', isError: false);
+      // Guardar sesión en singleton
+      AppSession.instance.set(
+        token:     result.token!,
+        idUsuario: result.idUsuario ?? 0,
+        rol:       result.rol ?? 'Odontologo',
+        nombre:    result.nombre ?? usuario,
+      );
+      _showSnackBar('Bienvenido, ${result.nombre ?? usuario} ✓', isError: false);
       await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       // El rol lo decide el backend — nunca el usuario

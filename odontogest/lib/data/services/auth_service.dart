@@ -14,6 +14,7 @@ class AuthResult {
   final String? token;
   final String? rol;
   final String? nombre;
+  final int?    idUsuario;
   final String? errorMsg;
 
   const AuthResult({
@@ -21,6 +22,7 @@ class AuthResult {
     this.token,
     this.rol,
     this.nombre,
+    this.idUsuario,
     this.errorMsg,
   });
 }
@@ -49,10 +51,11 @@ class AuthService {
 
       if (response.statusCode == 200 && body['success'] == true) {
         return AuthResult(
-          success: true,
-          token:   body['token']  as String?,
-          rol:     body['rol']    as String?,
-          nombre:  body['nombre'] as String?,
+          success:    true,
+          token:      body['token']      as String?,
+          rol:        body['rol']        as String?,
+          nombre:     body['nombre']     as String?,
+          idUsuario:  body['id_usuario'] as int?,
         );
       }
 

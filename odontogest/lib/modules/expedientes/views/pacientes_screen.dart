@@ -4,7 +4,7 @@ import '../../../core/constants/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/gradient_app_bar.dart';
 import '../../../core/widgets/status_badge.dart';
-import 'expediente_paciente_screen.dart';
+import 'buscar_paciente_screen.dart';
 
 class PacientesScreen extends StatefulWidget {
   const PacientesScreen({super.key});
@@ -139,7 +139,7 @@ class _PacienteCard extends StatelessWidget {
     final isActivo = paciente.status == 'Activo';
     return AppCard(
       onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const ExpedientePacienteScreen())),
+          MaterialPageRoute(builder: (_) => const BuscarPacienteScreen())),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [

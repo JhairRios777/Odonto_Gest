@@ -1,68 +1,114 @@
-// DashboardScreen — pantalla de inicio del odontólogo.
-// Muestra: bienvenida, citas del día, accesos rápidos.
+// DashboardScreen — pantalla de inicio.
+// Carga métricas y citas del día desde la API PHP.
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../core/session/app_session.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_badge.dart';
+import '../../../data/services/dashboard_service.dart';
 import '../../agenda/views/nueva_cita_screen.dart';
+import '../../expedientes/views/buscar_paciente_screen.dart';
 import '../../expedientes/views/expediente_paciente_screen.dart';
-import '../../expedientes/views/odontogram_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
-  // Demo data — reemplazar con llamadas a la API
-  static const _citasHoy = [
-    _CitaDemo(hora: '08:00', paciente: 'María López',    servicio: 'Limpieza dental',   status: 'Atendida',   color: AppColors.success),
-    _CitaDemo(hora: '09:00', paciente: 'Carlos Ruiz',    servicio: 'Ortodoncia',         status: 'En curso',   color: AppColors.primary),
-    _CitaDemo(hora: '10:00', paciente: 'Pedro Sánchez',  servicio: 'Extracción molar',  status: 'Pendiente',  color: AppColors.warning),
-    _CitaDemo(hora: '11:00', paciente: 'Ana Martínez',   servicio: 'Blanqueamiento',    status: 'Confirmada', color: AppColors.info),
-    _CitaDemo(hora: '14:00', paciente: 'José Herrera',   servicio: 'Corona porcelana',  status: 'Pendiente',  color: AppColors.warning),
-  ];
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  // ── Estado ───────────────────────────────────────────────────
+  bool               _loading   = true;
+  DashboardMetricas  _metricas  = DashboardMetricas.empty();
+  List<CitaHoy>      _citas     = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarDatos();
+  }
+
+  Future<void> _cargarDatos() async {
+    setState(() => _loading = true);
+    final results = await Future.wait([
+      DashboardService.fetchMetricas(),
+      DashboardService.fetchCitasHoy(),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _metricas = results[0] as DashboardMetricas;
+      _citas    = results[1] as List<CitaHoy>;
+      _loading  = false;
+    });
+  }
+
+  // ── UI ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          _buildHeader(context),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildStatRow(),
-                const SizedBox(height: 16),
-                _buildAccesosRapidos(context),
-                const SizedBox(height: 16),
-                _buildCitasHoy(context),
-              ]),
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _cargarDatos,
+        child: CustomScrollView(
+          slivers: [
+            _buildHeader(context),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (_loading) ...[
+                    const SizedBox(height: 40),
+                    const Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    ),
+                  ] else ...[
+                    _buildStatRow(),
+                    const SizedBox(height: 16),
+                    _buildAccesosRapidos(context),
+                    const SizedBox(height: 16),
+                    _buildCitasHoy(context),
+                  ],
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const NuevaCitaScreen())),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const NuevaCitaScreen()),
+        ).then((_) => _cargarDatos()), // refresca al volver
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('Nueva Cita', style: AppTypography.buttonSmall(color: Colors.white)),
+        label: Text('Nueva Cita',
+            style: AppTypography.buttonSmall(color: Colors.white)),
       ),
     );
   }
 
-  // ── Header con gradiente ──────────────────────────────────────
+  // ── Header ───────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
+    final nombre = AppSession.instance.nombre ?? 'Usuario';
+    final rol    = AppSession.instance.rol    ?? '';
+    final hoy    = _fechaHoy();
+
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
-      // Título visible solo cuando el header está colapsado (al hacer scroll)
       title: Text('OdontoGest',
           style: AppTypography.titleSmall(color: Colors.white)),
       centerTitle: false,
       backgroundColor: AppColors.primary,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: Colors.white),
+          onPressed: _cargarDatos,
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
-        // Sin title aquí — evita el overlap con el contenido del background
         collapseMode: CollapseMode.pin,
         background: Container(
           decoration: const BoxDecoration(gradient: AppGradients.primary),
@@ -76,22 +122,31 @@ class DashboardScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.white.withAlpha(51),
-                    child: const Icon(Icons.person, color: Colors.white, size: 22),
+                    child: Text(
+                      nombre.isNotEmpty ? nombre[0].toUpperCase() : 'U',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Dr. Rodríguez',
-                            style: AppTypography.titleSmall(color: Colors.white)),
-                        Text('Odontólogo General · Viernes 20 Jun',
-                            style: AppTypography.caption(color: Colors.white70)),
+                        Text(nombre,
+                            style:
+                                AppTypography.titleSmall(color: Colors.white)),
+                        Text('$rol · $hoy',
+                            style: AppTypography.caption(
+                                color: Colors.white70)),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                    icon: const Icon(Icons.notifications_outlined,
+                        color: Colors.white),
                     onPressed: () {},
                   ),
                 ],
@@ -103,19 +158,20 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ── Tarjetas de métricas ──────────────────────────────────────
+  // ── Métricas ─────────────────────────────────────────────────
   Widget _buildStatRow() {
     final stats = [
-      _Stat('Citas hoy', '8', AppColors.primary, Icons.calendar_today),
-      _Stat('Atendidas', '3', AppColors.success, Icons.check_circle_outline),
-      _Stat('Pendientes', '5', AppColors.warning, Icons.pending_outlined),
+      _Stat('Citas hoy',  _metricas.citasHoy.toString(),       AppColors.primary, Icons.calendar_today),
+      _Stat('Atendidas',  _metricas.atendidas.toString(),       AppColors.success, Icons.check_circle_outline),
+      _Stat('Pendientes', _metricas.pendientes.toString(),      AppColors.warning, Icons.pending_outlined),
     ];
 
     return Row(
-      children: stats.map((s) {
+      children: stats.asMap().entries.map((e) {
+        final s = e.value;
         return Expanded(
           child: AppCard(
-            margin: EdgeInsets.only(right: s == stats.last ? 0 : 8, bottom: 0),
+            margin: EdgeInsets.only(right: e.key < stats.length - 1 ? 8 : 0, bottom: 0),
             padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,7 +181,8 @@ class DashboardScreen extends StatelessWidget {
                 Text(s.value,
                     style: AppTypography.headlineSmall(color: s.color)),
                 Text(s.label,
-                    style: AppTypography.captionXs(color: AppColors.textMuted)),
+                    style:
+                        AppTypography.captionXs(color: AppColors.textMuted)),
               ],
             ),
           ),
@@ -138,13 +195,17 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildAccesosRapidos(BuildContext context) {
     final accesos = [
       _Acceso('Odontograma', Icons.grid_view_rounded, AppColors.primary,
-          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OdontogramScreen()))),
+          () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const BuscarPacienteScreen()))),
       _Acceso('Nuevo Paciente', Icons.person_add_outlined, AppColors.success,
           () {}),
       _Acceso('Nueva Cita', Icons.calendar_month_outlined, AppColors.warning,
-          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NuevaCitaScreen()))),
+          () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const NuevaCitaScreen()))),
       _Acceso('Expediente', Icons.folder_open_outlined, AppColors.info,
-          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpedientePacienteScreen()))),
+          () => Navigator.push(context,
+              MaterialPageRoute(
+                  builder: (_) => const BuscarPacienteScreen()))),
     ];
 
     return AppCard(
@@ -164,7 +225,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ── Lista de citas del día ────────────────────────────────────
+  // ── Lista citas del día ───────────────────────────────────────
   Widget _buildCitasHoy(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,34 +238,75 @@ class DashboardScreen extends StatelessWidget {
             TextButton(
               onPressed: () {},
               child: Text('Ver todas',
-                  style: AppTypography.labelSmall(color: AppColors.primary)),
+                  style:
+                      AppTypography.labelSmall(color: AppColors.primary)),
             ),
           ],
         ),
         const SizedBox(height: 4),
-        ..._citasHoy.map((cita) => _CitaCard(cita: cita, context: context)),
+        if (_citas.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text('Sin citas para hoy',
+                  style: AppTypography.body(color: AppColors.textMuted)),
+            ),
+          )
+        else
+          ..._citas.map((c) => _CitaCard(cita: c, context: context)),
       ],
     );
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  String _fechaHoy() {
+    final now = DateTime.now();
+    const dias = [
+      'Lunes', 'Martes', 'Miércoles', 'Jueves',
+      'Viernes', 'Sábado', 'Domingo'
+    ];
+    const meses = [
+      '', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+    ];
+    return '${dias[now.weekday - 1]} ${now.day} ${meses[now.month]}';
   }
 }
 
 // ── Cita card ──────────────────────────────────────────────────
 class _CitaCard extends StatelessWidget {
   const _CitaCard({required this.cita, required this.context});
-  final _CitaDemo cita;
+  final CitaHoy    cita;
   final BuildContext context;
+
+  Color _colorEstado(String estado) => switch (estado) {
+    'atendida'  => AppColors.success,
+    'en_curso'  => AppColors.primary,
+    'cancelada' => AppColors.error,
+    _           => AppColors.warning,  // pendiente, confirmada
+  };
+
+  String _labelEstado(String estado) => switch (estado) {
+    'atendida'   => 'Atendida',
+    'en_curso'   => 'En curso',
+    'confirmada' => 'Confirmada',
+    'cancelada'  => 'Cancelada',
+    _            => 'Pendiente',
+  };
 
   @override
   Widget build(BuildContext context) {
+    final color = _colorEstado(cita.estado);
     return AppCard(
       onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const ExpedientePacienteScreen())),
+          MaterialPageRoute(
+              builder: (_) => const BuscarPacienteScreen())),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          // Hora pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.primary.withAlpha(20),
               borderRadius: BorderRadius.circular(8),
@@ -213,35 +315,37 @@ class _CitaCard extends StatelessWidget {
                 style: AppTypography.labelSmall(color: AppColors.primary)),
           ),
           const SizedBox(width: 10),
-          // Avatar
           CircleAvatar(
             radius: 16,
             backgroundColor: AppColors.primaryLight,
             child: Text(
-              cita.paciente[0],
+              cita.paciente.isNotEmpty ? cita.paciente[0] : 'P',
               style: AppTypography.labelSmall(color: AppColors.primary),
             ),
           ),
           const SizedBox(width: 10),
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(cita.paciente,
-                    style: AppTypography.bodyMedium(color: AppColors.textDark)),
+                    style:
+                        AppTypography.bodyMedium(color: AppColors.textDark)),
                 Text(cita.servicio,
-                    style: AppTypography.captionXs(color: AppColors.textMuted)),
+                    style: AppTypography.captionXs(
+                        color: AppColors.textMuted)),
               ],
             ),
           ),
-          StatusBadge(label: cita.status, color: cita.color),
+          StatusBadge(
+              label: _labelEstado(cita.estado), color: color),
         ],
       ),
     );
   }
 }
 
+// ── Widgets auxiliares ────────────────────────────────────────
 class _AccesoWidget extends StatelessWidget {
   const _AccesoWidget({required this.acceso});
   final _Acceso acceso;
@@ -263,7 +367,8 @@ class _AccesoWidget extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(acceso.label,
-              style: AppTypography.captionXs(color: AppColors.textDark),
+              style:
+                  AppTypography.captionXs(color: AppColors.textDark),
               textAlign: TextAlign.center),
         ],
       ),
@@ -271,30 +376,18 @@ class _AccesoWidget extends StatelessWidget {
   }
 }
 
-// ── Data models (demo) ────────────────────────────────────────
-class _CitaDemo {
-  const _CitaDemo({
-    required this.hora,
-    required this.paciente,
-    required this.servicio,
-    required this.status,
-    required this.color,
-  });
-  final String hora, paciente, servicio, status;
-  final Color color;
-}
-
+// ── Data models ───────────────────────────────────────────────
 class _Stat {
   const _Stat(this.label, this.value, this.color, this.icon);
   final String label, value;
-  final Color color;
+  final Color  color;
   final IconData icon;
 }
 
 class _Acceso {
   const _Acceso(this.label, this.icon, this.color, this.onTap);
-  final String label;
-  final IconData icon;
-  final Color color;
+  final String       label;
+  final IconData     icon;
+  final Color        color;
   final VoidCallback onTap;
 }
