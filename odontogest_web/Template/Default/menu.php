@@ -13,7 +13,8 @@ $menu = [
         ['id'=>102,'nombre'=>'Roles',     'url'=>APP_URL.'Roles/index',     'icono'=>'fas fa-user-shield','permiso'=>'roles.ver'],
         ['id'=>103,'nombre'=>'Servicios', 'url'=>APP_URL.'Servicios/index', 'icono'=>'fas fa-tooth',      'permiso'=>'servicios.ver'],
         ['id'=>104,'nombre'=>'Reportes',  'url'=>APP_URL.'Reportes/index',  'icono'=>'fas fa-chart-bar',  'permiso'=>'reportes.ver'],
-        ['id'=>105,'nombre'=>'Auditoría', 'url'=>APP_URL.'Auditoria/index', 'icono'=>'fas fa-history',    'permiso'=>''],
+        ['id'=>105,'nombre'=>'Auditoría',      'url'=>APP_URL.'Auditoria/index',     'icono'=>'fas fa-history',  'permiso'=>''],
+        ['id'=>106,'nombre'=>'Configuración',  'url'=>APP_URL.'Configuracion/index', 'icono'=>'fas fa-gear',     'permiso'=>''],
     ]],
 ];
 
@@ -196,6 +197,13 @@ foreach (array_slice(explode(' ', $nombreUsuario), 0, 2) as $parte) {
                 </li>
                 <li><hr class="dropdown-divider my-1" style="border-color:#DDE4EF;"></li>
                 <li>
+                    <a class="dropdown-item" href="<?= APP_URL ?>Perfil/index"
+                       style="font-size:.875rem;color:var(--body-text,#1A2940);border-radius:6px;padding:8px 12px;">
+                        <i class="fas fa-user-circle me-2" style="color:#1A56AB;"></i>Mi Perfil
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider my-1" style="border-color:#DDE4EF;"></li>
+                <li>
                     <a class="dropdown-item" href="<?= APP_URL ?>Auth/logout"
                        style="font-size:.875rem;color:#dc2626;border-radius:6px;padding:8px 12px;">
                         <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
@@ -296,25 +304,54 @@ document.addEventListener('DOMContentLoaded', ogUpdateDarkIcon);
     const btnClose = document.getElementById('btnCloseSidebar');
     let collapsed  = localStorage.getItem('og_sidebar_collapsed')==='1';
 
-    function applySidebar(){
+    // Agregar title para tooltips en modo collapsed
+    function syncTooltips(isCollapsed) {
+        sidebar.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+            const span = link.querySelector('span');
+            if (span) {
+                link.title = isCollapsed ? span.textContent.trim() : '';
+            }
+        });
+    }
+
+    function applySidebar(animate=true){
+        if(!animate) sidebar.style.transition = 'none';
+
         if(window.innerWidth < 992){
             sidebar.classList.toggle('show', !collapsed);
             overlay.classList.toggle('show', !collapsed);
             sidebar.classList.remove('collapsed');
             header.classList.remove('sidebar-collapsed');
             main.classList.remove('sidebar-collapsed');
+            syncTooltips(false);
         } else {
             sidebar.classList.remove('show');
             overlay.classList.remove('show');
             sidebar.classList.toggle('collapsed', collapsed);
             header.classList.toggle('sidebar-collapsed', collapsed);
             main.classList.toggle('sidebar-collapsed', collapsed);
+            syncTooltips(collapsed);
+            // Cerrar acordeones al colapsar
+            if (collapsed) {
+                sidebar.querySelectorAll('.collapse.show').forEach(el => {
+                    el.classList.remove('show');
+                    const toggle = sidebar.querySelector(`[data-bs-target="#${el.id}"]`);
+                    if (toggle) toggle.setAttribute('aria-expanded','false');
+                });
+            }
         }
+
+        if(!animate) requestAnimationFrame(()=> sidebar.style.transition = '');
     }
-    btnToggle?.addEventListener('click',()=>{ collapsed=!collapsed; localStorage.setItem('og_sidebar_collapsed',collapsed?'1':'0'); applySidebar(); });
-    btnClose?.addEventListener('click', ()=>{ collapsed=true; applySidebar(); });
-    overlay?.addEventListener('click',  ()=>{ collapsed=true; applySidebar(); });
-    window.addEventListener('resize',   ()=>applySidebar());
-    applySidebar();
+
+    btnToggle?.addEventListener('click',()=>{
+        collapsed = !collapsed;
+        localStorage.setItem('og_sidebar_collapsed', collapsed ? '1' : '0');
+        applySidebar();
+    });
+    btnClose?.addEventListener('click', ()=>{ collapsed=true;  applySidebar(); });
+    overlay?.addEventListener('click',  ()=>{ collapsed=true;  applySidebar(); });
+    window.addEventListener('resize',   ()=>applySidebar(false));
+    applySidebar(false);
 })();
 </script>

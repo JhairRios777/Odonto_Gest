@@ -537,3 +537,77 @@ body, .sidebar, .top-header, .kpi-card, .tabla-og thead th,
 .dropdown-menu, .header-search input, .btn-notificaciones {
     transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR COLLAPSED — animaciones suaves
+   ══════════════════════════════════════════════════════════════ */
+
+/* Elementos que se ocultan al colapsar */
+.sidebar-logo-texto,
+.sidebar-user-info,
+.sidebar-nav .nav-link > span,
+.sidebar-nav .chevron-icon {
+    transition: opacity 0.18s ease, width 0s linear 0.18s;
+    opacity: 1;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Al colapsar: fade out de textos primero, luego la anchura cae */
+.sidebar.collapsed .sidebar-logo-texto,
+.sidebar.collapsed .sidebar-user-info,
+.sidebar.collapsed .sidebar-nav .nav-link > span,
+.sidebar.collapsed .sidebar-nav .chevron-icon {
+    opacity: 0;
+    width: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, width 0s linear 0.12s;
+}
+
+/* Al expandir: anchura primero, luego fade in con delay */
+.sidebar:not(.collapsed) .sidebar-logo-texto,
+.sidebar:not(.collapsed) .sidebar-user-info,
+.sidebar:not(.collapsed) .sidebar-nav .nav-link > span,
+.sidebar:not(.collapsed) .sidebar-nav .chevron-icon {
+    opacity: 1;
+    transition: opacity 0.2s ease 0.18s;
+}
+
+/* Centrar icono cuando está colapsado */
+.sidebar.collapsed .sidebar-nav .nav-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+}
+.sidebar.collapsed .sidebar-nav .nav-link i {
+    width: auto;
+    margin: 0;
+}
+
+/* Centrar logo y footer cuando está colapsado */
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 0 8px;
+}
+.sidebar.collapsed .sidebar-brand { gap: 0; }
+.sidebar.collapsed .sidebar-user  { justify-content: center; padding: 12px 0; gap: 0; }
+
+/* Tooltip nativo del browser (title) ya funciona — reforzar con cursor */
+.sidebar.collapsed .sidebar-nav .nav-link {
+    cursor: pointer;
+}
+
+/* Ocultar submenús accordion al colapsar */
+.sidebar.collapsed .collapse.show { display: none !important; }
+
+/* Overlay móvil */
+.sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: calc(var(--sidebar-z-index) - 1);
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+.sidebar-overlay.show { display: block; opacity: 1; }

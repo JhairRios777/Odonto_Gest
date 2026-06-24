@@ -140,9 +140,10 @@ $estadoBadge = [
                     ['label'=>'Atendidas',   'val'=>$m['graf_atendida']   ?? 0, 'color'=>'#16a34a', 'bg'=>'rgba(22,163,74,.12)'],
                     ['label'=>'Canceladas',  'val'=>$m['graf_cancelada']  ?? 0, 'color'=>'#dc2626', 'bg'=>'rgba(220,38,38,.12)'],
                 ];
-                $total = array_sum(array_column($resumen, 'val')) ?: 1;
+                $totalDisplay = array_sum(array_column($resumen, 'val'));
+                $totalDiv     = $totalDisplay ?: 1; // divisor para porcentajes, nunca 0
                 foreach ($resumen as $r):
-                    $pct = round(($r['val'] / $total) * 100);
+                    $pct = round(($r['val'] / $totalDiv) * 100);
                 ?>
                 <div style="margin-bottom:14px;">
                     <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
@@ -156,7 +157,7 @@ $estadoBadge = [
                 <?php endforeach; ?>
 
                 <div style="margin-top:20px;padding-top:14px;border-top:1px solid #DDE4EF;text-align:center;">
-                    <div style="font-size:1.5rem;font-weight:800;color:#1A2940;"><?= $fmtInt($total) ?></div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#1A2940;"><?= $fmtInt($totalDisplay) ?></div>
                     <div style="font-size:.76rem;color:#6B7280;">citas totales registradas</div>
                 </div>
             </div>

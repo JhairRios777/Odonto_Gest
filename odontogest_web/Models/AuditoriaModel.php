@@ -93,29 +93,16 @@ class AuditoriaModel {
         }
 
         $filtro = implode(' AND ', $where);
-        $base   = "FROM auditoria a JOIN usuarios u ON u.id_usuario = a.id_usuario WHERE $filtro";
+        $base   = "FROM auditoria a
+                   JOIN usuarios u ON u.id_usuario = a.id_usuario
+                   JOIN roles    r ON r.id_rol     = u.id_rol
+                   WHERE $filtro";
 
         $sCount = $db->prepare("SELECT COUNT(*) $base");
         $sCount->execute($params);
         $total  = (int)$sCount->fetchColumn();
 
-        $sData  = $db->prepare(
-            "SELECT a.id_auditoria, a.modulo, a.accion, a.descripcion,
-                    a.ip, a.user_agent, a.fecha,
-                    u.usuario, u.nombre_completo,
-                    r.nombre AS rol
-             $base
-             ORDER BY a.fecha DESC
-             LIMIT :lim OFFSET :off"
-        );
-        foreach ($params as $k => $v) $sData->bindValue($k, $v);
-        $sData->bindValue(':lim', $perPage, PDO::PARAM_INT);
-        $sData->bindValue(':off', $offset,  PDO::PARAM_INT);
-        $sData->execute();
-        $rows = $sData->fetchAll(PDO::FETCH_ASSOC);
-
-        // JOIN con roles para el rol del usuario (LEFT JOIN en la base query)
-        // Re-query con join completo
+        // Query única con JOIN a roles
         $sData2 = $db->prepare(
             "SELECT a.id_auditoria, a.modulo, a.accion, a.descripcion,
                     a.ip, a.user_agent, a.fecha,

@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- OdontoGest Variables & Base -->
     <link rel="stylesheet" href="<?= APP_URL ?>Content/Dist/css/variables.css">
+    <!-- Dark Mode Overrides (después de variables para mayor especificidad) -->
+    <link rel="stylesheet" href="<?= APP_URL ?>Content/Dist/css/dark-mode.css">
 
     <?php if (!empty($extraCss)): foreach ($extraCss as $css): ?>
         <link rel="stylesheet" href="<?= APP_URL . htmlspecialchars($css) ?>">
