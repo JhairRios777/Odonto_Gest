@@ -7,7 +7,8 @@ import 'package:http/http.dart' as http;
 // Android emulador  → 10.0.2.2  (apunta al localhost de tu PC)
 // Dispositivo físico → IP de tu PC en la red WiFi, ej: 192.168.1.X
 // Web / Windows     → localhost
-const String _kBaseUrl = 'http://localhost/odontogest_api';
+import '../../../core/app_config.dart';
+const String _kBaseUrl = AppConfig.apiBase;
 
 class AuthResult {
   final bool   success;

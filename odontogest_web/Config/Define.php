@@ -5,7 +5,11 @@ define('APP_NAME',    'OdontoGest');
 define('APP_VERSION', '1.0.0');
 
 // URL base
-define('APP_URL', 'http://localhost:9015/');
+// URL dinámica — funciona en cualquier puerto/host sin cambiar código
+$_protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$_host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$_path     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\') . '/';
+define('APP_URL', $_protocol . '://' . $_host . $_path);
 
 // Rutas absolutas
 define('ROOT_PATH',     __DIR__ . '/../');

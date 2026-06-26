@@ -1,7 +1,10 @@
 Options -Indexes
 RewriteEngine On
 
-# Redirigir todo a index.php excepto archivos/carpetas existentes
+# Sin RewriteBase — Apache usa la carpeta del .htaccess como contexto.
+# Funciona igual si está en VirtualHost propio (puerto 9015)
+# o dentro de htdocs/cualquier-subcarpeta/odontogest_web/
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]

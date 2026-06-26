@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../core/session/app_session.dart';
 
-const String _kBase = 'http://localhost/odontogest_api';
+import '../../core/app_config.dart';
+const String _kBase = AppConfig.apiBase;
 
 Map<String, String> get _h => {
   'Authorization': 'Bearer ${AppSession.instance.token}',

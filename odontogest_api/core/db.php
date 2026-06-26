@@ -2,10 +2,10 @@
 // ── Conexión PDO — OdontoGest API ─────────────────────────────
 // Copiar toda la carpeta odontogest_api a: C:\xampp\htdocs\odontogest_api\
 
-define('DB_HOST', 'localhost');
+define('DB_HOST', '3.13.183.20');
 define('DB_NAME', 'odonto_gest');
-define('DB_USER', 'root');
-define('DB_PASS', '');       // XAMPP por defecto no tiene contraseña
+define('DB_USER', 'admin');
+define('DB_PASS', 'AaPR2005');       // XAMPP por defecto no tiene contraseña
 define('DB_PORT', '3306');
 
 function getDB(): PDO {
