@@ -8,7 +8,7 @@ define('APP_VERSION', '1.0.0');
 // URL dinámica — funciona en cualquier puerto/host sin cambiar código
 $_protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $_host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$_path     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\') . '/';
+$_path     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\'') . '/';
 define('APP_URL', $_protocol . '://' . $_host . $_path);
 
 // Rutas absolutas
@@ -16,11 +16,12 @@ define('ROOT_PATH',     __DIR__ . '/../');
 define('TEMPLATE_PATH', ROOT_PATH . 'Template/Default/');
 define('VIEW_PATH',     ROOT_PATH . 'Views/');
 
+
 // Base de datos
-define('DB_HOST', 'localhost');
+define('DB_HOST', '3.13.183.20');
 define('DB_NAME', 'odonto_gest');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_USER', 'admin');
+define('DB_PASS', 'AaPR2005');
 define('DB_PORT', 3306);
 
 // Sesion

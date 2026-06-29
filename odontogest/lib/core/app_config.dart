@@ -10,5 +10,5 @@
 
 class AppConfig {
   // ↓ CAMBIAR AQUÍ según tu entorno
-  static const String apiBase = 'http://localhost/odontogest_api';
+  static const String apiBase = 'http://localhost/Clini_Dent/odontogest_api';
 }
