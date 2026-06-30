@@ -27,19 +27,19 @@ try {
     $stmt = $db->query("
         SELECT
             c.id_cita,
-            c.id_usuario AS id_odontologo_usuario,
+            o.id_usuario AS id_odontologo_usuario,
             CONCAT(p.nombre,' ',p.apellidos) AS paciente,
-            DATE_FORMAT(c.fecha_hora,'%H:%i') AS hora,
-            DATE(c.fecha_hora) AS fecha_cita,
+            DATE_FORMAT(c.fecha_cita,'%H:%i') AS hora,
+            DATE(c.fecha_cita) AS fecha_cita,
             s.nombre AS servicio
         FROM citas c
-        JOIN pacientes p  ON p.id_paciente   = c.id_paciente
-        JOIN servicios s  ON s.id_servicio   = c.id_servicio
+        JOIN pacientes   p ON p.id_paciente   = c.id_paciente
+        LEFT JOIN servicios   s ON s.id_servicio   = c.id_servicio
         JOIN odontologos o ON o.id_odontologo = c.id_odontologo
-        WHERE DATE(c.fecha_hora) IN ('$hoy','$manana')
+        WHERE DATE(c.fecha_cita) IN ('$hoy','$manana')
           AND c.estado IN ('pendiente','confirmada')
           $rolSql
-        ORDER BY c.fecha_hora ASC
+        ORDER BY c.fecha_cita ASC
     ");
 
     $citas   = $stmt->fetchAll();

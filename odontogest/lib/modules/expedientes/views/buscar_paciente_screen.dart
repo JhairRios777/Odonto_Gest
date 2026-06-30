@@ -1,4 +1,4 @@
-// BuscarPacienteScreen — buscador de pacientes para abrir expediente.
+// BuscarPacienteScreen — lista todos los pacientes al abrir, filtra localmente al escribir.
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../data/services/expediente_service.dart';
@@ -12,10 +12,16 @@ class BuscarPacienteScreen extends StatefulWidget {
 }
 
 class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
-  final _ctrl      = TextEditingController();
-  bool  _loading   = false;
-  List<BusquedaPaciente> _resultados = [];
-  String? _error;
+  final _ctrl = TextEditingController();
+  bool  _loading = true;
+  List<BusquedaPaciente> _todos      = []; // lista completa del servidor
+  List<BusquedaPaciente> _resultados = []; // lista filtrada
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarTodos();
+  }
 
   @override
   void dispose() {
@@ -23,19 +29,29 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
     super.dispose();
   }
 
-  Future<void> _buscar(String q) async {
-    q = q.trim();
-    if (q.length < 2) {
-      setState(() { _resultados = []; _error = null; });
-      return;
-    }
-    setState(() { _loading = true; _error = null; });
-    final res = await ExpedienteService.buscarPacientes(q);
+  Future<void> _cargarTodos() async {
+    setState(() => _loading = true);
+    final todos = await ExpedienteService.listarTodos();
     if (!mounted) return;
     setState(() {
-      _resultados = res;
+      _todos      = todos;
+      _resultados = todos;
       _loading    = false;
-      _error      = res.isEmpty ? 'No se encontraron pacientes' : null;
+    });
+  }
+
+  void _filtrar(String q) {
+    q = q.trim().toLowerCase();
+    setState(() {
+      if (q.isEmpty) {
+        _resultados = _todos;
+      } else {
+        _resultados = _todos.where((p) {
+          return p.nombre.toLowerCase().contains(q) ||
+              (p.numExpediente?.toLowerCase().contains(q) ?? false) ||
+              (p.telefono?.contains(q) ?? false);
+        }).toList();
+      }
     });
   }
 
@@ -57,82 +73,86 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
             color: AppColors.primary,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: TextField(
-              controller:    _ctrl,
-              autofocus:     true,
-              onChanged:     _buscar,
-              style:         AppTypography.body(color: AppColors.textDark),
+              controller: _ctrl,
+              autofocus:  false,
+              onChanged:  _filtrar,
+              style:      AppTypography.body(color: AppColors.textDark),
               decoration: InputDecoration(
-                hintText:    'Nombre o número de expediente…',
-                hintStyle:   AppTypography.body(color: AppColors.textMuted),
-                prefixIcon:  const Icon(Icons.search, color: AppColors.primary),
-                suffixIcon:  _ctrl.text.isNotEmpty
+                hintText:  'Nombre, expediente o teléfono…',
+                hintStyle: AppTypography.body(color: AppColors.textMuted),
+                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                suffixIcon: _ctrl.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, color: AppColors.textMuted),
                         onPressed: () {
                           _ctrl.clear();
-                          setState(() { _resultados = []; _error = null; });
+                          _filtrar('');
                         })
                     : null,
-                filled:      true,
-                fillColor:   AppColors.surface,
+                filled:    true,
+                fillColor: AppColors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               ),
             ),
           ),
 
+          // ── Contador ──
+          if (!_loading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_resultados.length} paciente${_resultados.length == 1 ? '' : 's'}',
+                  style: AppTypography.caption(color: AppColors.textMuted),
+                ),
+              ),
+            ),
+
           // ── Resultados ──
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                : _error != null
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary))
+                : _resultados.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.search_off, size: 48, color: AppColors.textMuted),
+                            const Icon(Icons.search_off,
+                                size: 48, color: AppColors.textMuted),
                             const SizedBox(height: 12),
-                            Text(_error!,
-                                style: AppTypography.body(color: AppColors.textMuted)),
+                            Text('No se encontraron pacientes',
+                                style: AppTypography.body(
+                                    color: AppColors.textMuted)),
                           ],
                         ),
                       )
-                    : _resultados.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.person_search,
-                                    size: 64, color: AppColors.primaryLight),
-                                const SizedBox(height: 16),
-                                Text('Escribe el nombre del paciente',
-                                    style: AppTypography.body(color: AppColors.textMuted)),
-                                const SizedBox(height: 4),
-                                Text('Mínimo 2 caracteres',
-                                    style: AppTypography.caption(color: AppColors.textMuted)),
-                              ],
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _resultados.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
-                            itemBuilder: (_, i) => _PacienteCard(
-                              paciente: _resultados[i],
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ExpedientePacienteScreen(
-                                    idPaciente: _resultados[i].idPaciente,
-                                    nombrePaciente: _resultados[i].nombre,
-                                  ),
+                    : RefreshIndicator(
+                        onRefresh: _cargarTodos,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _resultados.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (_, i) => _PacienteCard(
+                            paciente: _resultados[i],
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ExpedientePacienteScreen(
+                                  idPaciente: _resultados[i].idPaciente,
+                                  nombrePaciente: _resultados[i].nombre,
                                 ),
                               ),
                             ),
                           ),
+                        ),
+                      ),
           ),
         ],
       ),
@@ -162,7 +182,9 @@ class _PacienteCard extends StatelessWidget {
                 radius: 22,
                 backgroundColor: AppColors.primaryLight,
                 child: Text(
-                  paciente.nombre.isNotEmpty ? paciente.nombre[0].toUpperCase() : 'P',
+                  paciente.nombre.isNotEmpty
+                      ? paciente.nombre[0].toUpperCase()
+                      : 'P',
                   style: AppTypography.titleSmall(color: AppColors.primary),
                 ),
               ),
@@ -172,13 +194,16 @@ class _PacienteCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(paciente.nombre,
-                        style: AppTypography.bodyMedium(color: AppColors.textDark)),
+                        style: AppTypography.bodyMedium(
+                            color: AppColors.textDark)),
                     if (paciente.numExpediente != null)
                       Text('Exp. ${paciente.numExpediente}',
-                          style: AppTypography.caption(color: AppColors.textMuted)),
+                          style: AppTypography.caption(
+                              color: AppColors.textMuted)),
                     if (paciente.telefono != null)
                       Text(paciente.telefono!,
-                          style: AppTypography.captionXs(color: AppColors.textMuted)),
+                          style: AppTypography.captionXs(
+                              color: AppColors.textMuted)),
                   ],
                 ),
               ),

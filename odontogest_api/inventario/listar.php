@@ -67,7 +67,7 @@ try {
             p.tasa_impuesto,
             p.unidad_medida,
             p.estado,
-            pr.nombre AS proveedor,
+            pr.proveedor AS proveedor,
             CASE
                 WHEN p.stock = 0          THEN 'agotado'
                 WHEN p.stock <= p.stock_minimo THEN 'bajo'
@@ -75,6 +75,7 @@ try {
             END AS nivel_stock
         FROM producto p
         LEFT JOIN proveedores pr ON pr.id_proveedor = p.id_proveedor
+        -- proveedores.proveedor es el nombre (no .nombre)
         $whereSQL
         ORDER BY nivel_stock ASC, p.nombre ASC
         LIMIT $limit OFFSET $offset

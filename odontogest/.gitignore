@@ -54,3 +54,6 @@ app.*.map.json
 pubspec.lock
 
 #Lucas
+
+# Config local — cada dev edita su propia copia
+lib/core/app_config.dart

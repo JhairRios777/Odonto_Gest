@@ -10,5 +10,6 @@
 
 class AppConfig {
   // ↓ CAMBIAR AQUÍ según tu entorno
-  static const String apiBase = 'http://localhost/Clini_Dent/odontogest_api';
+  // app_config.dart — corregir a:
+static const String apiBase = 'http://localhost/odontogest_api';
 }

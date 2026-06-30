@@ -8,9 +8,19 @@ require_once __DIR__ . '/Response.php';
 const TOKEN_TTL = 86400; // 24 horas en segundos
 
 function getAuthUser(): array {
-    $header = $_SERVER['HTTP_AUTHORIZATION']
-           ?? apache_request_headers()['Authorization']
-           ?? '';
+    // XAMPP/Apache bloquea Authorization por defecto.
+    // El .htaccess lo re-expone como HTTP_AUTHORIZATION o REDIRECT_HTTP_AUTHORIZATION.
+    $header = '';
+    if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+        $header = $_SERVER['HTTP_AUTHORIZATION'];
+    } elseif (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    } elseif (function_exists('apache_request_headers')) {
+        $ah = apache_request_headers();
+        if (is_array($ah) && !empty($ah['Authorization'])) {
+            $header = $ah['Authorization'];
+        }
+    }
 
     if (!str_starts_with($header, 'Bearer ')) {
         error(401, 'Token requerido');

@@ -184,7 +184,15 @@ class ExpedientesModel {
         // Resolver id_odontologo desde la tabla odontologos (FK, no id_usuario)
         $odRow = $db->prepare("SELECT id_odontologo FROM odontologos WHERE id_usuario=:uid LIMIT 1");
         $odRow->execute([':uid' => Auth::id()]);
-        $idOd = $odRow->fetchColumn() ?: 1; // fallback: primer odontologo registrado
+        $idOd = $odRow->fetchColumn();
+        if (!$idOd) {
+            // El usuario logueado no es odontólogo (p.ej. Administrador):
+            // usar el primer odontólogo registrado en el sistema
+            $idOd = $db->query("SELECT id_odontologo FROM odontologos ORDER BY id_odontologo LIMIT 1")->fetchColumn();
+        }
+        if (!$idOd) {
+            throw new \RuntimeException('No existe ningún odontólogo registrado. Crea uno antes de guardar el odontograma.');
+        }
 
         foreach ($dientes as $pieza => $info) {
             // UPDATE si ya existe esa pieza en este expediente, INSERT si no

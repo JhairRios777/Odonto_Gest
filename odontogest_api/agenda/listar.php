@@ -52,7 +52,7 @@ try {
             c.id_cita,
             TIME_FORMAT(c.fecha_cita, '%H:%i')           AS hora,
             CONCAT(p.nombre, ' ', p.apellidos)            AS paciente,
-            CONCAT(u.nombre, ' ', u.apellido)             AS odontologo,
+            u.nombre_completo                              AS odontologo,
             COALESCE(s.nombre, t.descripcion, 'General')  AS servicio,
             c.estado,
             c.asistencia,

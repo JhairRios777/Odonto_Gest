@@ -185,7 +185,26 @@ class FotoExpediente {
 class ExpedienteService {
   static const _timeout = Duration(seconds: 10);
 
-  // Buscar pacientes
+  // Listar todos los pacientes activos (para carga inicial)
+  static Future<List<BusquedaPaciente>> listarTodos() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$_kBase/pacientes/listar.php?estado=activo&limit=100'),
+              headers: _h)
+          .timeout(_timeout);
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true) {
+          return (body['pacientes'] as List)
+              .map((e) => BusquedaPaciente.fromJson(e))
+              .toList();
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  // Buscar pacientes por query (API)
   static Future<List<BusquedaPaciente>> buscarPacientes(String q) async {
     try {
       final res = await http

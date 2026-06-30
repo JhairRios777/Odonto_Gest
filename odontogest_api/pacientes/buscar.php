@@ -28,14 +28,13 @@ try {
             p.correo,
             p.estado,
             e.id_expediente,
-            e.numero_expediente
+            CONCAT('EXP-', LPAD(e.id_expediente, 5, '0')) AS numero_expediente
         FROM pacientes p
         LEFT JOIN expedientes e ON e.id_paciente = p.id_paciente
         WHERE p.estado = 'activo'
           AND (
-              p.nombre     LIKE :q
-           OR p.apellidos  LIKE :q
-           OR e.numero_expediente LIKE :q
+              p.nombre    LIKE :q
+           OR p.apellidos LIKE :q
           )
         ORDER BY p.nombre, p.apellidos
         LIMIT 20

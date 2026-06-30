@@ -29,7 +29,7 @@ try {
     }
 
     if ($q !== '') {
-        $where[]      = '(p.nombre LIKE :q OR p.apellidos LIKE :q OR e.numero_expediente LIKE :q)';
+        $where[]      = '(p.nombre LIKE :q OR p.apellidos LIKE :q)';
         $params[':q'] = '%' . $q . '%';
     }
 
@@ -54,7 +54,7 @@ try {
             p.correo,
             p.estado,
             e.id_expediente,
-            e.numero_expediente
+            CONCAT('EXP-', LPAD(e.id_expediente, 5, '0')) AS numero_expediente
         FROM pacientes p
         LEFT JOIN expedientes e ON e.id_paciente = p.id_paciente
         $whereSQL
