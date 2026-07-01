@@ -26,8 +26,11 @@ class PacientesModel {
         $st = $db->prepare("
             SELECT p.id_paciente, p.nombre, p.apellidos,
                    CONCAT(p.nombre,' ',p.apellidos) AS nombre_completo,
-                   p.dni, p.telefono, p.correo, p.sexo, p.fecha_nacimiento,
-                   p.estado, p.created_at,
+                   p.dni, p.rtn, p.fecha_nacimiento, p.sexo,
+                   p.estado_civil, p.ocupacion,
+                   p.telefono, p.telefono_emergencia,
+                   p.nombre_contacto_emergencia, p.responsable_pago,
+                   p.correo, p.direccion, p.estado, p.created_at,
                    (SELECT COUNT(*) FROM citas c WHERE c.id_paciente = p.id_paciente) AS total_citas
             FROM pacientes p
             WHERE $w
@@ -87,16 +90,30 @@ class PacientesModel {
     public static function insertar(array $d): int {
         $db = Conexion::getInstance();
         $db->prepare("
-            INSERT INTO pacientes (nombre,apellidos,dni,rtn,fecha_nacimiento,sexo,telefono,correo,direccion,estado)
-            VALUES (:nom,:ape,:dni,:rtn,:fnac,:sexo,:tel,:cor,:dir,'activo')
+            INSERT INTO pacientes (
+                nombre, apellidos, dni, rtn, fecha_nacimiento, sexo,
+                estado_civil, ocupacion, telefono, telefono_emergencia,
+                nombre_contacto_emergencia, responsable_pago, correo, direccion, estado
+            ) VALUES (
+                :nom, :ape, :dni, :rtn, :fnac, :sexo,
+                :ecv, :ocu, :tel, :telE,
+                :conE, :rspP, :cor, :dir, 'activo'
+            )
         ")->execute([
-            ':nom'  => $d['nombre'],   ':ape' => $d['apellidos'],
-            ':dni'  => $d['dni']  ?? null, ':rtn' => $d['rtn'] ?? null,
-            ':fnac' => $d['fecha_nacimiento'] ?? null,
-            ':sexo' => $d['sexo'] ?? null,
-            ':tel'  => $d['telefono'] ?? null,
-            ':cor'  => $d['correo']   ?? null,
-            ':dir'  => $d['direccion']?? null,
+            ':nom'  => $d['nombre'],
+            ':ape'  => $d['apellidos'],
+            ':dni'  => $d['dni']                        ?? null,
+            ':rtn'  => $d['rtn']                        ?? null,
+            ':fnac' => $d['fecha_nacimiento']            ?? null,
+            ':sexo' => $d['sexo']                        ?? null,
+            ':ecv'  => $d['estado_civil']                ?? null,
+            ':ocu'  => $d['ocupacion']                   ?? null,
+            ':tel'  => $d['telefono']                    ?? null,
+            ':telE' => $d['telefono_emergencia']          ?? null,
+            ':conE' => $d['nombre_contacto_emergencia']  ?? null,
+            ':rspP' => $d['responsable_pago']             ?? null,
+            ':cor'  => $d['correo']                      ?? null,
+            ':dir'  => $d['direccion']                   ?? null,
         ]);
         return (int)$db->lastInsertId();
     }
@@ -106,16 +123,29 @@ class PacientesModel {
         $db->prepare("
             UPDATE pacientes SET
                 nombre=:nom, apellidos=:ape, dni=:dni, rtn=:rtn,
-                fecha_nacimiento=:fnac, sexo=:sexo, telefono=:tel,
+                fecha_nacimiento=:fnac, sexo=:sexo,
+                estado_civil=:ecv, ocupacion=:ocu,
+                telefono=:tel, telefono_emergencia=:telE,
+                nombre_contacto_emergencia=:conE, responsable_pago=:rspP,
                 correo=:cor, direccion=:dir, estado=:est
             WHERE id_paciente=:id
         ")->execute([
-            ':nom'=>$d['nombre'],  ':ape'=>$d['apellidos'],
-            ':dni'=>$d['dni']??null, ':rtn'=>$d['rtn']??null,
-            ':fnac'=>$d['fecha_nacimiento']??null,
-            ':sexo'=>$d['sexo']??null, ':tel'=>$d['telefono']??null,
-            ':cor'=>$d['correo']??null, ':dir'=>$d['direccion']??null,
-            ':est'=>$d['estado']??'activo', ':id'=>$id,
+            ':nom'  => $d['nombre'],
+            ':ape'  => $d['apellidos'],
+            ':dni'  => $d['dni']                        ?? null,
+            ':rtn'  => $d['rtn']                        ?? null,
+            ':fnac' => $d['fecha_nacimiento']            ?? null,
+            ':sexo' => $d['sexo']                        ?? null,
+            ':ecv'  => $d['estado_civil']                ?? null,
+            ':ocu'  => $d['ocupacion']                   ?? null,
+            ':tel'  => $d['telefono']                    ?? null,
+            ':telE' => $d['telefono_emergencia']          ?? null,
+            ':conE' => $d['nombre_contacto_emergencia']  ?? null,
+            ':rspP' => $d['responsable_pago']             ?? null,
+            ':cor'  => $d['correo']                      ?? null,
+            ':dir'  => $d['direccion']                   ?? null,
+            ':est'  => $d['estado']                      ?? 'activo',
+            ':id'   => $id,
         ]);
     }
 

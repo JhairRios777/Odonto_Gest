@@ -13,7 +13,7 @@ class InventarioModel {
                         WHEN p.stock<=p.stock_minimo THEN 'critico'
                         WHEN p.stock<=p.stock_minimo*1.5 THEN 'bajo'
                         ELSE 'ok' END AS nivel_stock,
-                   pr.proveedor AS proveedor_nombre
+                   pr.proveedor AS proveedor
             FROM producto p LEFT JOIN proveedores pr ON pr.id_proveedor=p.id_proveedor
             WHERE $w ORDER BY p.nombre LIMIT 15 OFFSET :off
         ");
@@ -47,6 +47,16 @@ class InventarioModel {
             ORDER BY porcentaje_stock ASC LIMIT $limite
         ")->fetchAll(PDO::FETCH_ASSOC);
     }
+    public static function listarProveedores(): array {
+        $db = Conexion::getInstance();
+        // Garantiza que exista al menos uno
+        $count = (int)$db->query("SELECT COUNT(*) FROM proveedores")->fetchColumn();
+        if ($count === 0) {
+            $db->prepare("INSERT INTO proveedores (proveedor,estado) VALUES ('Proveedor General','activo')")->execute();
+        }
+        return $db->query("SELECT id_proveedor, proveedor FROM proveedores WHERE estado='activo' ORDER BY proveedor")->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     private static function proveedorDefault(): int {
         $db  = Conexion::getInstance();
         $id  = (int)$db->query("SELECT id_proveedor FROM proveedores LIMIT 1")->fetchColumn();
@@ -59,14 +69,51 @@ class InventarioModel {
 
     public static function insertar(array $d): int {
         $db  = Conexion::getInstance();
-        $idP = self::proveedorDefault();
-        $db->prepare("INSERT INTO producto (id_proveedor,nombre,descripcion,unidad_medida,stock,stock_minimo,precio_costo,precio_venta,tasa_impuesto,estado) VALUES (:prov,:nom,:desc,:uni,:stk,:stm,:pc,:pv,'0','activo')")
-           ->execute([':prov'=>$idP,':nom'=>$d['nombre'],':desc'=>$d['descripcion']??null,':uni'=>$d['unidad_medida']??null,':stk'=>$d['stock'],':stm'=>$d['stock_minimo'],':pc'=>$d['precio_costo'],':pv'=>$d['precio_venta']]);
+        // Usar proveedor del form si viene, si no el default
+        $idP = !empty($d['id_proveedor']) ? (int)$d['id_proveedor'] : self::proveedorDefault();
+        $imp = isset($d['tasa_impuesto']) ? (float)$d['tasa_impuesto'] : 0;
+        $db->prepare("
+            INSERT INTO producto
+                (id_proveedor,nombre,descripcion,unidad_medida,stock,stock_minimo,
+                 precio_costo,precio_venta,tasa_impuesto,estado)
+            VALUES (:prov,:nom,:desc,:uni,:stk,:stm,:pc,:pv,:imp,'activo')
+        ")->execute([
+            ':prov' => $idP,
+            ':nom'  => $d['nombre'],
+            ':desc' => $d['descripcion']  ?? null,
+            ':uni'  => $d['unidad_medida']?? null,
+            ':stk'  => (int)$d['stock'],
+            ':stm'  => (int)$d['stock_minimo'],
+            ':pc'   => (float)($d['precio_costo'] ?? 0),
+            ':pv'   => (float)($d['precio_venta']  ?? 0),
+            ':imp'  => $imp,
+        ]);
         return (int)$db->lastInsertId();
     }
+
     public static function actualizar(int $id, array $d): void {
-        Conexion::getInstance()->prepare("UPDATE producto SET nombre=:nom,descripcion=:desc,unidad_medida=:uni,stock=:stk,stock_minimo=:stm,precio_costo=:pc,precio_venta=:pv,estado=:est WHERE id_producto=:id")
-           ->execute([':nom'=>$d['nombre'],':desc'=>$d['descripcion']??null,':uni'=>$d['unidad_medida']??null,':stk'=>$d['stock'],':stm'=>$d['stock_minimo'],':pc'=>$d['precio_costo'],':pv'=>$d['precio_venta'],':est'=>$d['estado'],':id'=>$id]);
+        $idP = !empty($d['id_proveedor']) ? (int)$d['id_proveedor'] : self::proveedorDefault();
+        $imp = isset($d['tasa_impuesto']) ? (float)$d['tasa_impuesto'] : 0;
+        Conexion::getInstance()->prepare("
+            UPDATE producto SET
+                id_proveedor=:prov, nombre=:nom, descripcion=:desc,
+                unidad_medida=:uni, stock=:stk, stock_minimo=:stm,
+                precio_costo=:pc, precio_venta=:pv,
+                tasa_impuesto=:imp, estado=:est
+            WHERE id_producto=:id
+        ")->execute([
+            ':prov' => $idP,
+            ':nom'  => $d['nombre'],
+            ':desc' => $d['descripcion']  ?? null,
+            ':uni'  => $d['unidad_medida']?? null,
+            ':stk'  => (int)$d['stock'],
+            ':stm'  => (int)$d['stock_minimo'],
+            ':pc'   => (float)($d['precio_costo'] ?? 0),
+            ':pv'   => (float)($d['precio_venta']  ?? 0),
+            ':imp'  => $imp,
+            ':est'  => $d['estado'] ?? 'activo',
+            ':id'   => $id,
+        ]);
     }
     public static function ajustarStock(int $id, int $cantidad, string $tipo, string $motivo=''): void {
         $db=Conexion::getInstance();

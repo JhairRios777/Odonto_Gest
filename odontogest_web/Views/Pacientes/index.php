@@ -115,6 +115,20 @@
                     <div><label class="form-label">Teléfono</label><input type="text" name="telefono" id="fp_tel" class="form-control"></div>
                     <div><label class="form-label">Correo</label><input type="email" name="correo" id="fp_cor" class="form-control"></div>
                     <div style="grid-column:span 2;"><label class="form-label">Dirección</label><input type="text" name="direccion" id="fp_dir" class="form-control"></div>
+                    <div><label class="form-label">Estado Civil</label>
+                        <select name="estado_civil" id="fp_ecv" class="form-select">
+                            <option value="">Seleccionar</option>
+                            <option value="soltero">Soltero/a</option>
+                            <option value="casado">Casado/a</option>
+                            <option value="union_libre">Unión libre</option>
+                            <option value="divorciado">Divorciado/a</option>
+                            <option value="viudo">Viudo/a</option>
+                            <option value="otro">Otro</option>
+                        </select></div>
+                    <div><label class="form-label">Ocupación</label><input type="text" name="ocupacion" id="fp_ocu" class="form-control" placeholder="Profesión u oficio"></div>
+                    <div><label class="form-label">Tel. Emergencia</label><input type="text" name="telefono_emergencia" id="fp_telE" class="form-control"></div>
+                    <div><label class="form-label">Contacto Emergencia</label><input type="text" name="nombre_contacto_emergencia" id="fp_conE" class="form-control" placeholder="Nombre completo"></div>
+                    <div><label class="form-label">Responsable de Pago</label><input type="text" name="responsable_pago" id="fp_rspP" class="form-control" placeholder="Nombre del responsable"></div>
                     <div><label class="form-label">Estado</label>
                         <select name="estado" id="fp_est" class="form-select">
                             <option value="activo">Activo</option><option value="inactivo">Inactivo</option><option value="fallecido">Fallecido</option>
@@ -149,6 +163,11 @@ function editarPaciente(p){
     document.getElementById('fp_tel').value=p.telefono||'';
     document.getElementById('fp_cor').value=p.correo||'';
     document.getElementById('fp_dir').value=p.direccion||'';
+    document.getElementById('fp_ecv').value=p.estado_civil||'';
+    document.getElementById('fp_ocu').value=p.ocupacion||'';
+    document.getElementById('fp_telE').value=p.telefono_emergencia||'';
+    document.getElementById('fp_conE').value=p.nombre_contacto_emergencia||'';
+    document.getElementById('fp_rspP').value=p.responsable_pago||'';
     document.getElementById('fp_est').value=p.estado||'activo';
     document.getElementById('modalPaciente').style.display='flex';
 }

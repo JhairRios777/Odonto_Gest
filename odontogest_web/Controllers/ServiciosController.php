@@ -15,7 +15,7 @@ class ServiciosController {
         Csrf::verify($_POST['csrf_token']??'');
         $id=ServiciosModel::insertar($_POST);
         AuditoriaModel::registrar('configuracion','crear',"Servicio #{$id}");
-        header('Content-Type:application/json'); echo json_encode(['success'=>true]); exit;
+        header('Location:'.APP_URL.'servicios?ok=creado'); exit;
     }
     public function actualizar(): void {
         Auth::requireLogin(); Auth::requireRol('Administrador');
@@ -24,7 +24,7 @@ class ServiciosController {
         $id=(int)($_POST['id_servicio']??0);
         ServiciosModel::actualizar($id,$_POST);
         AuditoriaModel::registrar('configuracion','editar',"Servicio #{$id}");
-        header('Content-Type:application/json'); echo json_encode(['success'=>true]); exit;
+        header('Location:'.APP_URL.'servicios?ok=editado'); exit;
     }
     public function eliminar(): void {
         Auth::requireLogin(); Auth::requireRol('Administrador');

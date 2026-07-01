@@ -9,9 +9,10 @@ $menu = [
     ['id'=>5,  'nombre'=>'Facturación',  'url'=>APP_URL.'Facturacion/index','icono'=>'fas fa-file-invoice-dollar', 'permiso'=>'facturacion.ver'],
     ['id'=>6,  'nombre'=>'Inventario',   'url'=>APP_URL.'Inventario/index', 'icono'=>'fas fa-boxes-stacked',       'permiso'=>'inventario.ver'],
     ['id'=>10, 'nombre'=>'Administración','url'=>'#',                        'icono'=>'fas fa-cogs', 'permiso'=>'', 'children'=>[
-        ['id'=>101,'nombre'=>'Usuarios',  'url'=>APP_URL.'Usuarios/index',  'icono'=>'fas fa-user-cog',   'permiso'=>'usuarios.ver'],
-        ['id'=>102,'nombre'=>'Roles',     'url'=>APP_URL.'Roles/index',     'icono'=>'fas fa-user-shield','permiso'=>'roles.ver'],
-        ['id'=>103,'nombre'=>'Servicios', 'url'=>APP_URL.'Servicios/index', 'icono'=>'fas fa-tooth',      'permiso'=>'servicios.ver'],
+        ['id'=>101,'nombre'=>'Usuarios',     'url'=>APP_URL.'Usuarios/index',     'icono'=>'fas fa-user-cog',    'permiso'=>'usuarios.ver'],
+        ['id'=>102,'nombre'=>'Roles',        'url'=>APP_URL.'Roles/index',        'icono'=>'fas fa-user-shield', 'permiso'=>'roles.ver'],
+        ['id'=>107,'nombre'=>'Odontólogos',  'url'=>APP_URL.'Odontologos/index',  'icono'=>'fas fa-user-doctor', 'permiso'=>''],
+        ['id'=>103,'nombre'=>'Servicios',    'url'=>APP_URL.'Servicios/index',    'icono'=>'fas fa-tooth',       'permiso'=>'servicios.ver'],
         ['id'=>104,'nombre'=>'Reportes',  'url'=>APP_URL.'Reportes/index',  'icono'=>'fas fa-chart-bar',  'permiso'=>'reportes.ver'],
         ['id'=>105,'nombre'=>'Auditoría',      'url'=>APP_URL.'Auditoria/index',     'icono'=>'fas fa-history',  'permiso'=>''],
         ['id'=>106,'nombre'=>'Configuración',  'url'=>APP_URL.'Configuracion/index', 'icono'=>'fas fa-gear',     'permiso'=>''],

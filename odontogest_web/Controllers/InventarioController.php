@@ -19,6 +19,7 @@ class InventarioController {
         $total        = InventarioModel::total($filtros);
         $kpis         = InventarioModel::kpis();
         $alertasStock = InventarioModel::alertasStock();
+        $proveedores  = InventarioModel::listarProveedores();
         $porPagina    = 15;
         $totalPags    = max(1, ceil($total / $porPagina));
 
@@ -31,15 +32,16 @@ class InventarioController {
         Csrf::verify($_POST['csrf_token'] ?? '');
 
         $data = [
-            'nombre'       => trim($_POST['nombre']       ?? ''),
-            'descripcion'  => trim($_POST['descripcion']  ?? '') ?: null,
-            'categoria'    => trim($_POST['categoria']    ?? '') ?: null,
-            'unidad_medida' => trim($_POST['unidad_medida'] ?? $_POST['unidad'] ?? ''),
-            'stock'        => (int)($_POST['stock']        ?? 0),
-            'stock_minimo' => (int)($_POST['stock_minimo'] ?? 0),
-            'precio_costo' => (float)($_POST['precio_costo'] ?? 0),
-            'precio_venta' => (float)($_POST['precio_venta'] ?? 0),
-            'estado'       => 'activo',
+            'id_proveedor'  => (int)($_POST['id_proveedor']  ?? 0) ?: null,
+            'nombre'        => trim($_POST['nombre']          ?? ''),
+            'descripcion'   => trim($_POST['descripcion']     ?? '') ?: null,
+            'unidad_medida' => trim($_POST['unidad_medida']   ?? ''),
+            'stock'         => (int)($_POST['stock']          ?? 0),
+            'stock_minimo'  => (int)($_POST['stock_minimo']   ?? 0),
+            'precio_costo'  => (float)($_POST['precio_costo'] ?? 0),
+            'precio_venta'  => (float)($_POST['precio_venta'] ?? 0),
+            'tasa_impuesto' => (float)($_POST['tasa_impuesto']?? 0),
+            'estado'        => 'activo',
         ];
 
         $id = InventarioModel::insertar($data);
@@ -55,15 +57,16 @@ class InventarioController {
 
         $id   = (int)($_POST['id_producto'] ?? 0);
         $data = [
-            'nombre'       => trim($_POST['nombre']       ?? ''),
-            'descripcion'  => trim($_POST['descripcion']  ?? '') ?: null,
-            'categoria'    => trim($_POST['categoria']    ?? '') ?: null,
-            'unidad_medida' => trim($_POST['unidad_medida'] ?? $_POST['unidad'] ?? ''),
-            'stock'        => (int)($_POST['stock']        ?? 0),
-            'stock_minimo' => (int)($_POST['stock_minimo'] ?? 0),
-            'precio_costo' => (float)($_POST['precio_costo'] ?? 0),
-            'precio_venta' => (float)($_POST['precio_venta'] ?? 0),
-            'estado'       => $_POST['estado'] ?? 'activo',
+            'id_proveedor'  => (int)($_POST['id_proveedor']  ?? 0) ?: null,
+            'nombre'        => trim($_POST['nombre']          ?? ''),
+            'descripcion'   => trim($_POST['descripcion']     ?? '') ?: null,
+            'unidad_medida' => trim($_POST['unidad_medida']   ?? ''),
+            'stock'         => (int)($_POST['stock']          ?? 0),
+            'stock_minimo'  => (int)($_POST['stock_minimo']   ?? 0),
+            'precio_costo'  => (float)($_POST['precio_costo'] ?? 0),
+            'precio_venta'  => (float)($_POST['precio_venta'] ?? 0),
+            'tasa_impuesto' => (float)($_POST['tasa_impuesto']?? 0),
+            'estado'        => $_POST['estado'] ?? 'activo',
         ];
 
         InventarioModel::actualizar($id, $data);

@@ -132,13 +132,26 @@
             <div style="padding:20px 22px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                     <div style="grid-column:span 2;"><label class="form-label">Nombre *</label><input type="text" name="nombre" id="pp_nom" class="form-control" required></div>
+                    <div><label class="form-label">Proveedor</label>
+                        <select name="id_proveedor" id="pp_prov" class="form-select">
+                            <option value="">— Seleccionar —</option>
+                            <?php foreach($proveedores as $pv): ?>
+                            <option value="<?= $pv['id_proveedor'] ?>"><?= htmlspecialchars($pv['proveedor']) ?></option>
+                            <?php endforeach; ?>
+                        </select></div>
                     <div><label class="form-label">Unidad</label><input type="text" name="unidad_medida" id="pp_uni" class="form-control" placeholder="Caja, unidad, frasco..."></div>
-                    <div><label class="form-label">Estado</label>
-                        <select name="estado" id="pp_est" class="form-select"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
                     <div><label class="form-label">Stock actual *</label><input type="number" name="stock" id="pp_stk" class="form-control" min="0" required></div>
                     <div><label class="form-label">Stock mínimo *</label><input type="number" name="stock_minimo" id="pp_stm" class="form-control" min="0" required></div>
                     <div><label class="form-label">Precio Costo (L.)</label><input type="number" name="precio_costo" id="pp_pc" class="form-control" step="0.01" min="0"></div>
                     <div><label class="form-label">Precio Venta (L.)</label><input type="number" name="precio_venta" id="pp_pv" class="form-control" step="0.01" min="0"></div>
+                    <div><label class="form-label">Tasa Impuesto (%)</label>
+                        <select name="tasa_impuesto" id="pp_imp" class="form-select">
+                            <option value="0">0% — Sin impuesto</option>
+                            <option value="15">15% — ISV</option>
+                            <option value="18">18% — ISV especial</option>
+                        </select></div>
+                    <div><label class="form-label">Estado</label>
+                        <select name="estado" id="pp_est" class="form-select"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
                     <div style="grid-column:span 2;"><label class="form-label">Descripción</label><textarea name="descripcion" id="pp_desc" class="form-control" rows="2"></textarea></div>
                 </div>
             </div>
@@ -160,9 +173,13 @@
 function editarProducto(p){
     document.getElementById('modalProdTitulo').textContent='Editar Producto';
     document.getElementById('formProducto').action='<?= APP_URL ?>inventario/actualizar';
-    ['id_producto','nombre','unidad_medida','stock','stock_minimo','precio_costo','precio_venta','descripcion','estado'].forEach(k=>{
-        const el=document.getElementById('pp_'+{id_producto:'id',nombre:'nom',unidad_medida:'uni',stock:'stk',stock_minimo:'stm',precio_costo:'pc',precio_venta:'pv',descripcion:'desc',estado:'est'}[k]);
-        if(el) el.value=p[k]||'';
+    const map={id_producto:'id',nombre:'nom',unidad_medida:'uni',stock:'stk',
+                stock_minimo:'stm',precio_costo:'pc',precio_venta:'pv',
+                descripcion:'desc',estado:'est',
+                id_proveedor:'prov',tasa_impuesto:'imp'};
+    Object.entries(map).forEach(([k,s])=>{
+        const el=document.getElementById('pp_'+s);
+        if(el) el.value=p[k]??'';
     });
     document.getElementById('modalProducto').style.display='flex';
 }
