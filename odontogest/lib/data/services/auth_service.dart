@@ -2,20 +2,24 @@
 // El rol es determinado por el backend, nunca por el cliente.
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
-// ── URL base de la API ────────────────────────────────────────
-// Android emulador  → 10.0.2.2  (apunta al localhost de tu PC)
-// Dispositivo físico → IP de tu PC en la red WiFi, ej: 192.168.1.X
-// Web / Windows     → localhost
 import '../../../core/app_config.dart';
+import '../../../core/session/app_session.dart';
+
 const String _kBaseUrl = AppConfig.apiBase;
+Map<String, String> get _hAuth => {
+  'Authorization': 'Bearer ${AppSession.instance.token}',
+  'Content-Type': 'application/json',
+};
 
 class AuthResult {
-  final bool   success;
+  final bool    success;
   final String? token;
   final String? rol;
   final String? nombre;
   final int?    idUsuario;
+  final String? usuario;
+  final String? correo;
+  final String? telefono;
   final String? errorMsg;
 
   const AuthResult({
@@ -24,6 +28,9 @@ class AuthResult {
     this.rol,
     this.nombre,
     this.idUsuario,
+    this.usuario,
+    this.correo,
+    this.telefono,
     this.errorMsg,
   });
 }
@@ -31,22 +38,17 @@ class AuthResult {
 class AuthService {
   static const _timeout = Duration(seconds: 10);
 
-  /// Llama a POST /auth/login y retorna [AuthResult].
-  /// El backend valida credenciales y devuelve el rol asignado.
+  /// Login: retorna AuthResult con token + datos de perfil.
   static Future<AuthResult> login({
     required String usuario,
     required String contrasena,
   }) async {
-    final uri = Uri.parse('$_kBaseUrl/auth/login.php');
-
     try {
-      final response = await http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'usuario': usuario, 'contrasena': contrasena}),
-          )
-          .timeout(_timeout);
+      final response = await http.post(
+        Uri.parse('$_kBaseUrl/auth/login.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'usuario': usuario, 'contrasena': contrasena}),
+      ).timeout(_timeout);
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -57,20 +59,57 @@ class AuthService {
           rol:        body['rol']        as String?,
           nombre:     body['nombre']     as String?,
           idUsuario:  body['id_usuario'] as int?,
+          usuario:    body['usuario']    as String?,
+          correo:     body['correo']     as String?,
+          telefono:   body['telefono']   as String?,
         );
       }
-
-      // Error del servidor (401, 403, 400…)
       return AuthResult(
         success:  false,
         errorMsg: body['mensaje'] as String? ?? 'Error desconocido',
       );
     } on Exception catch (e) {
-      // Timeout, sin conexión, host no encontrado…
       return AuthResult(
         success:  false,
         errorMsg: 'No se pudo conectar con el servidor.\n$e',
       );
+    }
+  }
+
+  /// Actualizar datos de perfil del usuario autenticado.
+  /// Envía sólo los campos que no sean nulos.
+  static Future<Map<String, dynamic>> actualizarPerfil({
+    String? nombre,
+    String? usuario,
+    String? correo,
+    String? telefono,
+    String? nuevaContrasena,
+    String? contrasenaActual,
+  }) async {
+    try {
+      final payload = <String, dynamic>{};
+      if (nombre   != null && nombre.isNotEmpty)   payload['nombre']    = nombre;
+      if (usuario  != null && usuario.isNotEmpty)  payload['usuario']   = usuario;
+      if (correo   != null && correo.isNotEmpty)   payload['correo']    = correo;
+      if (telefono != null && telefono.isNotEmpty) payload['telefono']  = telefono;
+      if (nuevaContrasena  != null && nuevaContrasena.isNotEmpty) {
+        payload['nueva_contrasena']    = nuevaContrasena;
+        payload['contrasena_actual']   = contrasenaActual ?? '';
+      }
+
+      final res = await http.put(
+        Uri.parse('$_kBaseUrl/usuarios/perfil.php'),
+        headers: _hAuth,
+        body: jsonEncode(payload),
+      ).timeout(_timeout);
+
+      final body = jsonDecode(res.body);
+      return {
+        'success': res.statusCode == 200 && body['success'] == true,
+        'mensaje': body['mensaje'] ?? body['error'] ?? 'Error desconocido',
+      };
+    } catch (e) {
+      return {'success': false, 'mensaje': e.toString()};
     }
   }
 }

@@ -68,4 +68,70 @@ class AgendaService {
       return res.statusCode == 200 && (jsonDecode(res.body)['success'] == true);
     } catch (_) { return false; }
   }
+
+  // Lista odontólogos activos para el formulario de nueva cita
+  static Future<List<Map<String, dynamic>>> listarOdontologos() async {
+    try {
+      final res = await http.get(
+        Uri.parse('$_kBase/agenda/odontologos.php'),
+        headers: _h,
+      ).timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true) {
+          return List<Map<String, dynamic>>.from(body['odontologos']);
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  // Slots disponibles para una fecha y odontólogo
+  static Future<List<Map<String, dynamic>>> slotsDisponibles(
+      int idOdontologo, String fecha) async {
+    try {
+      final res = await http.get(
+        Uri.parse('$_kBase/agenda/slots_disponibles.php'
+            '?id_odontologo=$idOdontologo&fecha=$fecha'),
+        headers: _h,
+      ).timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true) {
+          return List<Map<String, dynamic>>.from(body['slots']);
+        }
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  // Crear nueva cita
+  static Future<Map<String, dynamic>> crearCita({
+    required int    idPaciente,
+    required int    idOdontologo,
+    required String fechaCita,   // 'YYYY-MM-DD HH:MM'
+    int?            idServicio,
+    String?         notas,
+  }) async {
+    try {
+      final payload = <String, dynamic>{
+        'id_paciente':   idPaciente,
+        'id_odontologo': idOdontologo,
+        'fecha_cita':    fechaCita,
+        if (idServicio != null) 'id_servicio': idServicio,
+        if (notas != null && notas.isNotEmpty) 'notas': notas,
+      };
+      final res = await http.post(
+        Uri.parse('$_kBase/agenda/crear.php'),
+        headers: _h, body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 10));
+      final body = jsonDecode(res.body);
+      return {
+        'success': res.statusCode == 200 && body['success'] == true,
+        'mensaje': body['mensaje'] ?? body['error'] ?? 'Error desconocido',
+      };
+    } catch (e) {
+      return {'success': false, 'mensaje': e.toString()};
+    }
+  }
 }

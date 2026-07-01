@@ -1,6 +1,7 @@
 // ExpedientePacienteScreen — historial clínico con tabs.
 // Tabs: Resumen | Odontograma | Recetas | Tratamientos | Fotos
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/status_badge.dart';
@@ -161,8 +162,10 @@ class _ExpedientePacienteScreenState extends State<ExpedientePacienteScreen>
                       },
                     ),
                     _TabFotos(
-                      fotos:   _fotos,
-                      loading: _loadingFotos,
+                      fotos:        _fotos,
+                      loading:      _loadingFotos,
+                      idExpediente: _resumen!.idExpediente!,
+                      onFotoSubida: _cargarFotos,
                     ),
                   ],
                 ),
@@ -544,58 +547,182 @@ class _TabTratamientos extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════
 // TAB FOTOS
 // ══════════════════════════════════════════════════════════════
-class _TabFotos extends StatelessWidget {
-  const _TabFotos({required this.fotos, required this.loading});
+class _TabFotos extends StatefulWidget {
+  const _TabFotos({
+    required this.fotos,
+    required this.loading,
+    required this.idExpediente,
+    required this.onFotoSubida,
+  });
   final List<FotoExpediente> fotos;
   final bool                 loading;
+  final int                  idExpediente;
+  final VoidCallback         onFotoSubida;
+
+  @override
+  State<_TabFotos> createState() => _TabFotosState();
+}
+
+class _TabFotosState extends State<_TabFotos> {
+  bool _subiendo = false;
+  final _picker  = ImagePicker();
+
+  // Muestra opciones cámara / galería
+  void _mostrarOpciones() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Tomar foto'),
+              onTap: () { Navigator.pop(context); _seleccionar(ImageSource.camera); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Elegir de galería'),
+              onTap: () { Navigator.pop(context); _seleccionar(ImageSource.gallery); },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _seleccionar(ImageSource source) async {
+    final XFile? file = await _picker.pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 1920,
+    );
+    if (file == null || !mounted) return;
+    await _subir(file);
+  }
+
+  Future<void> _subir(XFile file) async {
+    // Pedir descripción opcional
+    String descripcion = '';
+    final ctrl = TextEditingController();
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Descripción (opcional)'),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Ej: Antes del tratamiento, radiografía…'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Omitir')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () { descripcion = ctrl.text.trim(); Navigator.pop(context); },
+              child: const Text('OK', style: TextStyle(color: Colors.white))),
+          ],
+        ),
+      );
+    }
+    if (!mounted) return;
+
+    setState(() => _subiendo = true);
+    final ok = await ExpedienteService.subirFoto(
+        widget.idExpediente, file, descripcion);
+    if (!mounted) return;
+    setState(() => _subiendo = false);
+
+    if (ok) {
+      widget.onFotoSubida(); // refresca la lista en el parent
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al subir la foto. Verifica el servidor.'),
+          backgroundColor: Colors.red));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-    }
-    if (fotos.isEmpty) {
-      return _emptyState('Sin fotos en el expediente', Icons.photo_library_outlined);
-    }
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _subiendo ? null : _mostrarOpciones,
+        backgroundColor: AppColors.primary,
+        icon: _subiendo
+            ? const SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2.5))
+            : const Icon(Icons.add_a_photo, color: Colors.white),
+        label: Text(
+          _subiendo ? 'Subiendo…' : 'Agregar foto',
+          style: AppTypography.buttonSmall(color: Colors.white)),
       ),
-      itemCount: fotos.length,
-      itemBuilder: (_, i) {
-        final f = fotos[i];
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.network(
-                'http://localhost${f.url}',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: AppColors.primaryLight,
-                  child: const Icon(Icons.broken_image, color: AppColors.primary),
-                ),
-              ),
-              if (f.descripcion != null)
-                Positioned(
-                  bottom: 0, left: 0, right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    color: Colors.black54,
-                    child: Text(f.descripcion!,
-                        style: const TextStyle(color: Colors.white, fontSize: 11),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+      body: widget.loading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary))
+          : widget.fotos.isEmpty
+              ? _emptyState(
+                  'Sin fotos — toca el botón para agregar',
+                  Icons.add_a_photo_outlined)
+              : GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
+                  itemCount: widget.fotos.length,
+                  itemBuilder: (_, i) {
+                    final f = widget.fotos[i];
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            'http://localhost${f.url}',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColors.primaryLight,
+                              child: const Icon(Icons.broken_image,
+                                  color: AppColors.primary)),
+                          ),
+                          if (f.descripcion != null)
+                            Positioned(
+                              bottom: 0, left: 0, right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                color: Colors.black54,
+                                child: Text(f.descripcion!,
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 11),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -738,7 +865,7 @@ class _FormRecetaState extends State<_FormReceta> {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FORM TRATAMIENTO (Bottom Sheet)
+// FORM TRATAMIENTO (Bottom Sheet) — catálogo cargado desde API
 // ══════════════════════════════════════════════════════════════
 class _FormTratamiento extends StatefulWidget {
   const _FormTratamiento({required this.idPaciente});
@@ -751,29 +878,29 @@ class _FormTratamiento extends StatefulWidget {
 class _FormTratamientoState extends State<_FormTratamiento> {
   final _form      = GlobalKey<FormState>();
   bool  _loading   = false;
+  bool  _loadingCat = true;
   int?  _idTrat;
   final _descCtrl  = TextEditingController();
   final _costoCtrl = TextEditingController();
 
-  // Catálogo de tratamientos (fallback estático si la API falla)
-  final List<Map<String, dynamic>> _catalogo = [
-    {'id': 1,  'nombre': 'Limpieza dental'},
-    {'id': 2,  'nombre': 'Extracción simple'},
-    {'id': 3,  'nombre': 'Extracción quirúrgica'},
-    {'id': 4,  'nombre': 'Obturación (amalgama)'},
-    {'id': 5,  'nombre': 'Obturación (resina)'},
-    {'id': 6,  'nombre': 'Corona porcelana'},
-    {'id': 7,  'nombre': 'Corona metal-porcelana'},
-    {'id': 8,  'nombre': 'Ortodoncia metálica'},
-    {'id': 9,  'nombre': 'Ortodoncia estética'},
-    {'id': 10, 'nombre': 'Blanqueamiento'},
-    {'id': 11, 'nombre': 'Implante dental'},
-    {'id': 12, 'nombre': 'Endodoncia (conducto)'},
-  ];
+  List<Map<String, dynamic>> _catalogo = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarCatalogo();
+  }
+
+  Future<void> _cargarCatalogo() async {
+    final cat = await ExpedienteService.fetchCatalogTratamientos();
+    if (!mounted) return;
+    setState(() { _catalogo = cat; _loadingCat = false; });
+  }
 
   @override
   void dispose() {
-    _descCtrl.dispose(); _costoCtrl.dispose();
+    _descCtrl.dispose();
+    _costoCtrl.dispose();
     super.dispose();
   }
 
@@ -788,8 +915,9 @@ class _FormTratamientoState extends State<_FormTratamiento> {
       'costo':          double.tryParse(_costoCtrl.text) ?? 0,
     });
     if (!mounted) return;
-    if (ok) Navigator.pop(context);
-    else {
+    if (ok) {
+      Navigator.pop(context);
+    } else {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error al guardar el tratamiento')));
@@ -815,8 +943,7 @@ class _FormTratamientoState extends State<_FormTratamiento> {
                   width: 40, height: 4,
                   decoration: BoxDecoration(
                     color: AppColors.textMuted,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                    borderRadius: BorderRadius.circular(2)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -824,27 +951,55 @@ class _FormTratamientoState extends State<_FormTratamiento> {
                   style: AppTypography.titleSmall(color: AppColors.primary)),
               const SizedBox(height: 16),
 
-              DropdownButtonFormField<int>(
-                value: _idTrat,
-                decoration: InputDecoration(
-                  hintText: 'Selecciona tratamiento *',
-                  filled: true, fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-                ),
-                items: _catalogo.map((t) => DropdownMenuItem<int>(
-                  value: t['id'] as int,
-                  child: Text(t['nombre'] as String),
-                )).toList(),
-                onChanged: (v) => setState(() => _idTrat = v),
-                validator: (v) => v == null ? 'Selecciona un tratamiento' : null,
-              ),
+              // Selector de tipo de tratamiento
+              _loadingCat
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: CircularProgressIndicator(
+                            color: AppColors.primary, strokeWidth: 2),
+                      ))
+                  : DropdownButtonFormField<int>(
+                      value: _idTrat,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        hintText: 'Selecciona tratamiento *',
+                        filled: true, fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 14),
+                      ),
+                      items: _catalogo.map((t) => DropdownMenuItem<int>(
+                        value: (t['id_tratamiento'] as num).toInt(),
+                        child: Text(
+                          t['descripcion'] as String,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )).toList(),
+                      onChanged: (v) {
+                        setState(() {
+                          _idTrat = v;
+                          // Prellenar costo si viene de la API
+                          final item = _catalogo.firstWhere(
+                            (t) => (t['id_tratamiento'] as num).toInt() == v,
+                            orElse: () => {},
+                          );
+                          final precio = (item['precio_base'] as num?)?.toDouble() ?? 0;
+                          if (precio > 0) {
+                            _costoCtrl.text = precio.toStringAsFixed(2);
+                          }
+                        });
+                      },
+                      validator: (v) =>
+                          v == null ? 'Selecciona un tratamiento' : null,
+                    ),
               const SizedBox(height: 10),
 
               TextFormField(
                 controller: _costoCtrl,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 enabled: !_loading,
                 style: AppTypography.body(color: AppColors.textDark),
                 decoration: InputDecoration(
@@ -852,10 +1007,13 @@ class _FormTratamientoState extends State<_FormTratamiento> {
                   prefixText: 'L ',
                   filled: true, fillColor: AppColors.background,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 14),
                 ),
-                validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Requerido' : null,
               ),
               const SizedBox(height: 10),
 
@@ -868,8 +1026,10 @@ class _FormTratamientoState extends State<_FormTratamiento> {
                   hintText: 'Observaciones (opcional)',
                   filled: true, fillColor: AppColors.background,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 14),
                 ),
               ),
               const SizedBox(height: 20),
@@ -877,14 +1037,17 @@ class _FormTratamientoState extends State<_FormTratamiento> {
               SizedBox(
                 width: double.infinity, height: 48,
                 child: ElevatedButton(
-                  onPressed: _loading ? null : _guardar,
+                  onPressed: (_loading || _loadingCat) ? null : _guardar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: _loading
-                      ? const SizedBox(width: 22, height: 22,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                      ? const SizedBox(
+                          width: 22, height: 22,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.5))
                       : Text('Registrar',
                           style: AppTypography.button(color: Colors.white)),
                 ),

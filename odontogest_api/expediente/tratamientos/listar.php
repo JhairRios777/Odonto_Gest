@@ -26,7 +26,7 @@ try {
             th.abono,
             th.saldo_pendiente,
             th.estado,
-            CONCAT(u.nombre, ' ', u.apellido) AS odontologo
+            u.nombre_completo AS odontologo
         FROM tratamientos_historial th
         JOIN tratamientos  t  ON t.id_tratamiento  = th.id_tratamiento
         JOIN odontologos   od ON od.id_odontologo  = th.id_odontologo

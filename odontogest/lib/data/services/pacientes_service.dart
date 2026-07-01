@@ -10,25 +10,42 @@ Map<String, String> get _h => {
 };
 
 class PacienteLista {
-  final int    idPaciente;
-  final String nombre;
-  final String expediente;
-  final String telefono;
-  final String tipoSangre;
-  final String estado;
+  final int     idPaciente;
+  final String  nombre;
+  final String  expediente;
+  final String  telefono;
+  final String  estado;
+  final String? dni;
+  final String? correo;
+  final String? fechaNacimiento;
+  final String? sexo;
+  final int?    idExpediente;
 
   const PacienteLista({
-    required this.idPaciente, required this.nombre, required this.expediente,
-    required this.telefono, required this.tipoSangre, required this.estado,
+    required this.idPaciente,
+    required this.nombre,
+    required this.expediente,
+    required this.telefono,
+    required this.estado,
+    this.dni,
+    this.correo,
+    this.fechaNacimiento,
+    this.sexo,
+    this.idExpediente,
   });
 
   factory PacienteLista.fromJson(Map<String, dynamic> j) => PacienteLista(
-    idPaciente:  j['id_paciente']        ?? 0,
-    nombre:      '${j['nombre'] ?? ''} ${j['apellidos'] ?? ''}'.trim(),
-    expediente:  j['numero_expediente']  ?? '',
-    telefono:    j['telefono']           ?? '',
-    tipoSangre:  j['tipo_sangre']        ?? '',
-    estado:      j['estado']             ?? 'activo',
+    idPaciente:      j['id_paciente']       ?? 0,
+    nombre:          j['nombre_completo']   ??
+                     '${j['nombre'] ?? ''} ${j['apellidos'] ?? ''}'.trim(),
+    expediente:      j['numero_expediente'] ?? '',
+    telefono:        j['telefono']          ?? '',
+    estado:          j['estado']            ?? 'activo',
+    dni:             j['dni']               as String?,
+    correo:          j['correo']            as String?,
+    fechaNacimiento: j['fecha_nacimiento']  as String?,
+    sexo:            j['sexo']              as String?,
+    idExpediente:    j['id_expediente']     as int?,
   );
 }
 

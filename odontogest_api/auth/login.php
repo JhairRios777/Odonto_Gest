@@ -39,7 +39,9 @@ if ($usuario === '' || $contrasena === '') {
 try {
     $db  = getDB();
     $sql = 'SELECT u.id_usuario, u.usuario, u.contrasena,
-                   u.nombre_completo, u.estado,
+                   u.nombre_completo, u.correo,
+                   COALESCE(u.telefono, u.telefono_celular, "") AS telefono,
+                   u.estado,
                    r.nombre AS rol
             FROM usuarios u
             JOIN roles r ON r.id_rol = u.id_rol
@@ -83,8 +85,11 @@ try {
 
 // ── Respuesta exitosa ─────────────────────────────────────────
 ok([
-    'token'    => $token,
-    'rol'      => $user['rol'],
-    'nombre'   => $user['nombre_completo'],
-    'id'       => $user['id_usuario'],
+    'token'      => $token,
+    'rol'        => $user['rol'],
+    'nombre'     => $user['nombre_completo'],
+    'id_usuario' => $user['id_usuario'],
+    'usuario'    => $user['usuario'],
+    'correo'     => $user['correo']   ?? '',
+    'telefono'   => $user['telefono'] ?? '',
 ]);

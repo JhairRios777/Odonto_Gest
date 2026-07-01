@@ -1,7 +1,7 @@
 // ── ExpedienteService — todas las llamadas API del expediente clínico ──
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../../core/session/app_session.dart';
 
 import '../../core/app_config.dart';
@@ -364,17 +364,19 @@ class ExpedienteService {
     return [];
   }
 
-  // Fotos — POST subir (multipart)
-  static Future<bool> subirFoto(int idExpediente, File foto, String descripcion) async {
+  // Fotos — POST subir (multipart, web-compatible via XFile bytes)
+  static Future<bool> subirFoto(int idExpediente, XFile foto, String descripcion) async {
     try {
+      final bytes = await foto.readAsBytes();
       final req = http.MultipartRequest(
         'POST',
         Uri.parse('$_kBase/expediente/fotos/subir.php'),
       )
         ..headers['Authorization'] = 'Bearer ${AppSession.instance.token}'
-        ..fields['id_expediente'] = idExpediente.toString()
-        ..fields['descripcion']   = descripcion
-        ..files.add(await http.MultipartFile.fromPath('foto', foto.path));
+        ..fields['id_expediente']  = idExpediente.toString()
+        ..fields['descripcion']    = descripcion
+        ..files.add(http.MultipartFile.fromBytes(
+          'foto', bytes, filename: foto.name));
 
       final streamed = await req.send().timeout(_timeout);
       final res      = await http.Response.fromStream(streamed);
@@ -382,5 +384,36 @@ class ExpedienteService {
     } catch (_) {
       return false;
     }
+  }
+
+  // Catálogo de tratamientos (para el selector en _FormTratamiento)
+  static Future<List<Map<String, dynamic>>> fetchCatalogTratamientos() async {
+    try {
+      final res = await http.get(
+        Uri.parse('$_kBase/expediente/tratamientos/catalogo.php'),
+        headers: _h,
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true) {
+          return List<Map<String, dynamic>>.from(body['tratamientos']);
+        }
+      }
+    } catch (_) {}
+    // Fallback estático si la API falla
+    return [
+      {'id_tratamiento': 1,  'descripcion': 'Limpieza dental',         'precio_base': 0},
+      {'id_tratamiento': 2,  'descripcion': 'Extracción simple',        'precio_base': 0},
+      {'id_tratamiento': 3,  'descripcion': 'Extracción quirúrgica',    'precio_base': 0},
+      {'id_tratamiento': 4,  'descripcion': 'Obturación (amalgama)',    'precio_base': 0},
+      {'id_tratamiento': 5,  'descripcion': 'Obturación (resina)',      'precio_base': 0},
+      {'id_tratamiento': 6,  'descripcion': 'Corona porcelana',         'precio_base': 0},
+      {'id_tratamiento': 7,  'descripcion': 'Corona metal-porcelana',   'precio_base': 0},
+      {'id_tratamiento': 8,  'descripcion': 'Ortodoncia metálica',      'precio_base': 0},
+      {'id_tratamiento': 9,  'descripcion': 'Ortodoncia estética',      'precio_base': 0},
+      {'id_tratamiento': 10, 'descripcion': 'Blanqueamiento',           'precio_base': 0},
+      {'id_tratamiento': 11, 'descripcion': 'Implante dental',          'precio_base': 0},
+      {'id_tratamiento': 12, 'descripcion': 'Endodoncia (conducto)',    'precio_base': 0},
+    ];
   }
 }

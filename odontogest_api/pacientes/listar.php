@@ -29,7 +29,7 @@ try {
     }
 
     if ($q !== '') {
-        $where[]      = '(p.nombre LIKE :q OR p.apellidos LIKE :q)';
+        $where[]      = '(p.nombre LIKE :q OR p.apellidos LIKE :q OR p.dni LIKE :q OR p.telefono LIKE :q)';
         $params[':q'] = '%' . $q . '%';
     }
 
@@ -49,10 +49,13 @@ try {
         SELECT
             p.id_paciente,
             CONCAT(p.nombre, ' ', p.apellidos)  AS nombre_completo,
+            p.dni,
             p.fecha_nacimiento,
             p.telefono,
             p.correo,
             p.estado,
+            p.estado_civil,
+            p.sexo,
             e.id_expediente,
             CONCAT('EXP-', LPAD(e.id_expediente, 5, '0')) AS numero_expediente
         FROM pacientes p

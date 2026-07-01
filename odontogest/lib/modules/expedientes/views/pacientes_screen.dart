@@ -6,6 +6,7 @@ import '../../../core/widgets/gradient_app_bar.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/services/pacientes_service.dart';
 import 'buscar_paciente_screen.dart';
+import 'expediente_paciente_screen.dart';
 
 class PacientesScreen extends StatefulWidget {
   const PacientesScreen({super.key});
@@ -200,8 +201,15 @@ class _PacienteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActivo = p.estado == 'activo';
     return AppCard(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const BuscarPacienteScreen())),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ExpedientePacienteScreen(
+            idPaciente:     p.idPaciente,
+            nombrePaciente: p.nombre,
+          ),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
@@ -217,22 +225,28 @@ class _PacienteCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(p.nombre, style: AppTypography.bodyMedium(color: AppColors.textDark)),
+              Text(p.nombre,
+                  style: AppTypography.bodyMedium(color: AppColors.textDark)),
               const SizedBox(height: 2),
               Row(children: [
-                Text(p.expediente, style: AppTypography.caption(color: AppColors.textMuted)),
-                if (p.tipoSangre.isNotEmpty) ...[
+                if (p.expediente.isNotEmpty)
+                  Text(p.expediente,
+                      style: AppTypography.caption(color: AppColors.textMuted)),
+                if (p.dni != null && p.dni!.isNotEmpty) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                     decoration: BoxDecoration(
-                      color: AppColors.errorLight, borderRadius: BorderRadius.circular(4)),
-                    child: Text(p.tipoSangre, style: AppTypography.badge(color: AppColors.error)),
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(4)),
+                    child: Text('DNI: ${p.dni}',
+                        style: AppTypography.badge(color: AppColors.primary)),
                   ),
                 ],
               ]),
               if (p.telefono.isNotEmpty)
-                Text(p.telefono, style: AppTypography.caption(color: AppColors.textMuted)),
+                Text(p.telefono,
+                    style: AppTypography.caption(color: AppColors.textMuted)),
             ]),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
