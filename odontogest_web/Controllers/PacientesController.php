@@ -41,21 +41,24 @@ class PacientesController {
         Csrf::verify($_POST['csrf_token'] ?? '');
 
         $data = [
-            'nombre'       => trim($_POST['nombre']       ?? ''),
-            'apellidos'    => trim($_POST['apellidos']    ?? ''),
-            'fecha_nac'    => $_POST['fecha_nac']    ?? null,
-            'sexo'         => $_POST['sexo']         ?? '',
-            'telefono'     => trim($_POST['telefono'] ?? ''),
-            'correo'       => trim($_POST['correo']   ?? ''),
-            'direccion'    => trim($_POST['direccion']?? ''),
-            'rtn'          => trim($_POST['rtn']      ?? '') ?: null,
-            'alergias'     => trim($_POST['alergias'] ?? '') ?: null,
-            'grupo_sangre' => $_POST['grupo_sangre']  ?? null,
-            'estado'       => 'activo',
+            'nombre'                     => trim($_POST['nombre']                     ?? ''),
+            'apellidos'                  => trim($_POST['apellidos']                  ?? ''),
+            'dni'                        => trim($_POST['dni']                        ?? '') ?: null,
+            'rtn'                        => trim($_POST['rtn']                        ?? '') ?: null,
+            'fecha_nacimiento'           => ($_POST['fecha_nacimiento'] ?? '') ?: null,
+            'sexo'                       => $_POST['sexo']                            ?? null,
+            'estado_civil'               => $_POST['estado_civil']                    ?? null,
+            'ocupacion'                  => trim($_POST['ocupacion']                  ?? '') ?: null,
+            'telefono'                   => trim($_POST['telefono']                   ?? '') ?: null,
+            'correo'                     => trim($_POST['correo']                     ?? '') ?: null,
+            'direccion'                  => trim($_POST['direccion']                  ?? '') ?: null,
+            'telefono_emergencia'        => trim($_POST['telefono_emergencia']        ?? '') ?: null,
+            'nombre_contacto_emergencia' => trim($_POST['nombre_contacto_emergencia'] ?? '') ?: null,
+            'responsable_pago'           => trim($_POST['responsable_pago']           ?? '') ?: null,
         ];
 
         $id = PacientesModel::insertar($data);
-        AuditoriaModel::registrar('agenda', 'crear', "Paciente #{$id}");
+        AuditoriaModel::registrar('pacientes', 'crear', "Paciente #{$id}");
         header('Location: ' . APP_URL . 'pacientes?ok=creado');
         exit;
     }
@@ -67,21 +70,25 @@ class PacientesController {
 
         $id   = (int)($_POST['id_paciente'] ?? 0);
         $data = [
-            'nombre'       => trim($_POST['nombre']       ?? ''),
-            'apellidos'    => trim($_POST['apellidos']    ?? ''),
-            'fecha_nac'    => $_POST['fecha_nac']    ?? null,
-            'sexo'         => $_POST['sexo']         ?? '',
-            'telefono'     => trim($_POST['telefono'] ?? ''),
-            'correo'       => trim($_POST['correo']   ?? ''),
-            'direccion'    => trim($_POST['direccion']?? ''),
-            'rtn'          => trim($_POST['rtn']      ?? '') ?: null,
-            'alergias'     => trim($_POST['alergias'] ?? '') ?: null,
-            'grupo_sangre' => $_POST['grupo_sangre']  ?? null,
-            'estado'       => $_POST['estado']        ?? 'activo',
+            'nombre'                     => trim($_POST['nombre']                     ?? ''),
+            'apellidos'                  => trim($_POST['apellidos']                  ?? ''),
+            'dni'                        => trim($_POST['dni']                        ?? '') ?: null,
+            'rtn'                        => trim($_POST['rtn']                        ?? '') ?: null,
+            'fecha_nacimiento'           => ($_POST['fecha_nacimiento'] ?? '') ?: null,
+            'sexo'                       => $_POST['sexo']                            ?? null,
+            'estado_civil'               => $_POST['estado_civil']                    ?? null,
+            'ocupacion'                  => trim($_POST['ocupacion']                  ?? '') ?: null,
+            'telefono'                   => trim($_POST['telefono']                   ?? '') ?: null,
+            'correo'                     => trim($_POST['correo']                     ?? '') ?: null,
+            'direccion'                  => trim($_POST['direccion']                  ?? '') ?: null,
+            'telefono_emergencia'        => trim($_POST['telefono_emergencia']        ?? '') ?: null,
+            'nombre_contacto_emergencia' => trim($_POST['nombre_contacto_emergencia'] ?? '') ?: null,
+            'responsable_pago'           => trim($_POST['responsable_pago']           ?? '') ?: null,
+            'estado'                     => $_POST['estado']                          ?? 'activo',
         ];
 
         PacientesModel::actualizar($id, $data);
-        AuditoriaModel::registrar('agenda', 'editar', "Paciente #{$id}");
+        AuditoriaModel::registrar('pacientes', 'editar', "Paciente #{$id}");
         header('Location: ' . APP_URL . 'pacientes?ok=actualizado');
         exit;
     }

@@ -7,16 +7,6 @@
 require_once __DIR__ . '/../core/db.php';
 require_once __DIR__ . '/../core/Response.php';
 
-// ── CORS — permite llamadas desde Flutter (emulador / dispositivo) ──
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     error(405, 'Método no permitido');
 }
@@ -38,15 +28,15 @@ if ($usuario === '' || $contrasena === '') {
 // ── Buscar usuario en la BD ───────────────────────────────────
 try {
     $db  = getDB();
-    $sql = 'SELECT u.id_usuario, u.usuario, u.contrasena,
+    $sql = "SELECT u.id_usuario, u.usuario, u.contrasena,
                    u.nombre_completo, u.correo,
-                   COALESCE(u.telefono, u.telefono_celular, "") AS telefono,
+                   COALESCE(u.telefono, '') AS telefono,
                    u.estado,
                    r.nombre AS rol
             FROM usuarios u
             JOIN roles r ON r.id_rol = u.id_rol
             WHERE u.usuario = :usuario
-            LIMIT 1';
+            LIMIT 1";
 
     $stmt = $db->prepare($sql);
     $stmt->execute([':usuario' => $usuario]);

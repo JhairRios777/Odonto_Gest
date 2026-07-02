@@ -56,11 +56,9 @@ function getAuthUser(): array {
     ];
 }
 
-// Aplica CORS y sale si es preflight OPTIONS
+// CORS manejado íntegramente por .htaccess (Header always set + RewriteRule 204).
+// Esta función solo actúa como fallback de seguridad para el preflight.
 function corsHeaders(): void {
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(204);
         exit;
