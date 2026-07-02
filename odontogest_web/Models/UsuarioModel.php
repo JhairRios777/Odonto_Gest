@@ -108,13 +108,16 @@ class UsuarioModel {
             'INSERT INTO usuarios (id_rol, usuario, contrasena, nombre_completo, correo, telefono, estado)
              VALUES (:id_rol, :usuario, :hash, :nombre, :correo, :tel, :estado)'
         );
+        // Correo/teléfono vacíos → NULL (evita UNIQUE constraint con '')
+        $correo  = trim($d['correo']   ?? '');
+        $telefono= trim($d['telefono'] ?? '');
         $s->execute([
-            ':id_rol'  => $d['id_rol'],
+            ':id_rol'  => (int)$d['id_rol'],
             ':usuario' => trim($d['usuario']),
             ':hash'    => $hash,
             ':nombre'  => trim($d['nombre_completo']),
-            ':correo'  => trim($d['correo'] ?? ''),
-            ':tel'     => trim($d['telefono'] ?? ''),
+            ':correo'  => $correo   !== '' ? $correo   : null,
+            ':tel'     => $telefono !== '' ? $telefono : null,
             ':estado'  => $d['estado'] ?? 'activo',
         ]);
         return (int)$db->lastInsertId();
